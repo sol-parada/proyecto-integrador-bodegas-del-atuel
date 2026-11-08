@@ -24,10 +24,8 @@ Las reglas importantes del negocio estarán protegidas principalmente desde la b
 
 ## Integrantes
 
-- Renata
-- Valentina
-- Santiago
-- Sol
+- Muzas Valentina
+- Parada Solange
 
 ## Tecnologías
 
