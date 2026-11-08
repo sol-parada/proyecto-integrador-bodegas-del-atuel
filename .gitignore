@@ -1,0 +1,48 @@
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Node.js
+node_modules/
+dist/
+build/
+
+# Backups y archivos generados de PostgreSQL
+*.dump
+*.backup
+*.sql.gz
+*.tar
+*.tar.gz
+
+# Archivos de prueba locales
+coverage/
+.pytest_cache/
+
+# Archivos de configuración local
+docker-compose.override.yml
