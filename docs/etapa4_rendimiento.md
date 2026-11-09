@@ -4,9 +4,7 @@
 
 ## 1. Objetivo
 
-Analizar la utilidad de cinco índices propuestos para
-optimizar consultas reales del sistema y medir el
-rendimiento de las consultas antes de aplicarlos.
+Analizar el rendimiento de los cinco índices originales y de un sexto índice incorporado posteriormente, relacionándolos con consultas reales del sistema y evaluando sus beneficios y costos mediante mediciones controladas.
 
 ## 2. Entorno utilizado
 
@@ -25,8 +23,7 @@ sin crear los cinco índices adicionales de la Etapa 4.
 
 ## 3. Tarea 1 — Relación entre índices y consultas reales
 
-Los cinco índices candidatos fueron definidos por
-Santiago en database/migrations/008_indices.sql.
+Inicialmente se evaluaron cinco índices definidos en database/migrations/008_indices.sql. Posteriormente, a partir de las pruebas de rendimiento de S4, se decidió incorporar un sexto índice sobre renglon_transferencia(cod_vino). Su evaluación y justificación se presentan al final del informe.
 
 ### 3.1. idx_comprobante_sala_fecha
 
@@ -377,15 +374,7 @@ en las secciones siguientes de este informe.
 
 ### 8.7. Observación sobre el criterio de aceptación
 
-Se completó la comparación de tres consultas
-con y sin índices adicionales.
-
-Sin embargo, no se demostraron mejoras atribuibles
-a los índices en las tres consultas originales.
-El criterio de aceptación referido a tres mejoras
-queda sujeto a revisión con el equipo.
-
-
+Se completaron las comparaciones de S1, S4 y S8 con y sin los cinco índices originales. También se documentaron tres mejoras medidas: dos en consultas complementarias filtradas y una en S4 mediante el sexto índice incorporado posteriormente. Las mejoras de las consultas complementarias no deben confundirse con mejoras de las versiones globales originales de S1 y S8. El cumplimiento literal del criterio de aceptación queda sujeto a la revisión final del equipo.
 
 ## 9. Prueba complementaria del índice por vino
 
@@ -747,34 +736,37 @@ Etapa 3 ni las reglas de negocio.
 
 ## Prueba experimental de optimizacion S4
 
-### Objetivo
+## 11. Optimización de S4 mediante el sexto índice
 
-Evaluar un indice adicional para optimizar la consulta
-S4, que identifica las cinco salas con mayor cantidad
-solicitada de un vino durante los ultimos 15 dias.
+### 11.1. Objetivo
 
-### Indice experimental
+Optimizar la consulta S4, que identifica las cinco salas que solicitaron mayor cantidad de un vino durante los últimos 15 días.
+
+### 11.2. Índice incorporado
+
+Después de evaluar los resultados y acordarlo con Sol, se decidió incorporar un sexto índice a `database/migrations/008_indices.sql`:
 
 ```sql
-CREATE INDEX idx_renglon_transferencia_vino_prueba
+CREATE INDEX idx_renglon_transferencia_vino
 ON renglon_transferencia (cod_vino);
 ```
 
-El indice se creo exclusivamente en la base experimental
-etapa4_indice_s4_prueba, sin modificar la migracion 008.
+Este índice permite localizar los renglones correspondientes a un vino específico sin recorrer secuencialmente toda la tabla.
 
-### Metodologia
+### 11.3. Metodología
 
-Se comparo la base con los cinco indices originales
-contra una copia equivalente que incorpora el indice
-experimental.
+Se compararon dos bases equivalentes:
 
-Se realizaron cinco ejecuciones alternadas por
-configuracion con EXPLAIN (ANALYZE, BUFFERS).
+- `bodegas_etapa4_con_indices`: contiene los cinco índices originales.
+- `etapa4_indice_s4_prueba`: contiene los cinco índices originales y el sexto índice experimental.
 
-### Resultados
+En la base experimental, el índice se denominó `idx_renglon_transferencia_vino_prueba`.
 
-| Repeticion | Sin indice experimental (ms) | Con indice experimental (ms) |
+Se realizaron cinco ejecuciones alternadas por configuración utilizando `EXPLAIN (ANALYZE, BUFFERS)`.
+
+### 11.4. Resultados
+
+| Repetición | Sin sexto índice (ms) | Con sexto índice (ms) |
 |---|---:|---:|
 | 1 | 13,661 | 1,322 |
 | 2 | 2,577 | 1,548 |
@@ -783,34 +775,32 @@ configuracion con EXPLAIN (ANALYZE, BUFFERS).
 | 5 | 2,440 | 1,403 |
 | **Mediana** | **2,577** | **1,403** |
 
-Reduccion observada del tiempo de ejecucion: 45,56 %.
+**Reducción observada del tiempo de ejecución: 45,56 %.**
 
-### Analisis
+### 11.5. Análisis de los planes
 
-Sin el indice experimental, PostgreSQL utilizo Seq Scan
-sobre renglon_transferencia.
+Sin el sexto índice, PostgreSQL utilizó `Seq Scan` sobre `renglon_transferencia`.
 
-Con el indice, PostgreSQL utilizo Bitmap Index Scan
-sobre idx_renglon_transferencia_vino_prueba, seguido
-de Bitmap Heap Scan.
+Con el índice adicional, utilizó `Bitmap Index Scan` sobre `idx_renglon_transferencia_vino_prueba`, seguido de `Bitmap Heap Scan`.
 
-El costo estimado final disminuyo de 253,01 a 120,17.
+El costo estimado final disminuyó de **253,01 a 120,17**.
 
-De los 11.078 renglones de transferencia,
-solamente 58 correspondian al vino 90.
+De los 11.078 renglones de transferencia, solamente 58 correspondían al vino 90.
 
-La mejora observada se relaciona con la mayor
-selectividad del filtro por cod_vino.
+Esta selectividad explica por qué el índice resultó útil para la consulta S4.
 
-### Evidencias
+### 11.6. Evidencias
 
-Los diez planes completos se encuentran en:
+Los diez planes completos están guardados en:
 
-database/performance/prueba_indice_s4/
+`database/performance/prueba_indice_s4/`
 
-### Estado
+### 11.7. Conclusión
 
-Indice experimental evaluado favorablemente.
-Su incorporacion a 008_indices.sql queda pendiente
-de revision con Sol.
+Las cinco mediciones mostraron tiempos inferiores al utilizar el nuevo índice.
 
+Por este motivo, se decidió incorporarlo definitivamente a `008_indices.sql`, conservando los cinco índices anteriores.
+
+La prueba original se realizó en una base experimental y sus resultados se conservaron como evidencia.
+
+El nuevo índice mejora la consulta S4. Las otras dos mejoras documentadas corresponden a variantes filtradas de S1 y S8, por lo que deben distinguirse de las consultas globales originales al evaluar los criterios de aceptación.
