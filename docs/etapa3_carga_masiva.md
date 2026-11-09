@@ -146,10 +146,14 @@ referencial finalizaron sin inconsistencias.
 
 La transacción fue confirmada en PostgreSQL.
 
-Esta prueba valida el funcionamiento del generador
-actualizado en modo reducido. Todavía no reemplaza
-la evidencia de una carga completa con los CSV.
 
+Esta prueba permitió validar inicialmente el
+funcionamiento del generador actualizado en modo
+reducido.
+
+Posteriormente, el 09/11/2026, se ejecutó la
+carga masiva definitiva con los catálogos CSV.
+Sus resultados están documentados en la sección 5.
 
 ## 3. Estado de verificaciones
 
@@ -161,32 +165,58 @@ la evidencia de una carga completa con los CSV.
 - [x] Consistencia de importes de comprobantes.
 - [x] Medición del tiempo total de ejecución.
 - [x] Generación y restauración del respaldo anterior.
-- [ ] Generación del respaldo de la carga actualizada.
-- [ ] Verificación de restauración del respaldo actualizado.
-- [ ] Acuerdo sobre fechas y regla RN-11.
+- [x] Generación del respaldo de la carga actualizada.
+- [x] Verificación de restauración del respaldo actualizado.
+- [x] Acuerdo sobre fechas y regla RN-11, documentado en la sección 4.
 - [ ] Revisión final del repositorio y entrega.
 
+## 4. Reproducibilidad de datos y coherencia con RN-11
 
-## 4. Reproducibilidad de fechas
+El generador utiliza una semilla fija para reproducir
+los datos sintéticos, sus cantidades y relaciones,
+siempre que se mantengan las mismas condiciones
+de ejecución.
 
-El generador utiliza una semilla fija y una fecha de referencia para permitir la reproducción de los datos sintéticos.
+### 4.1. Tratamiento de las fechas
 
-Sin embargo, se identificó una diferencia entre los requisitos de reproducibilidad de la Etapa 3 y la regla RN-11 implementada en la Etapa 2.
+Las fechas de las transferencias y los comprobantes
+dependen del día real de ejecución.
 
-En la Etapa 1, la tabla transferencia define fecha_confeccion con DEFAULT CURRENT_DATE.
+Esto ocurre porque el trigger correspondiente a
+la regla de negocio RN-11 establece obligatoriamente
+`CURRENT_DATE` para las transferencias.
 
-Posteriormente, en la Etapa 2, el trigger de la RN-11 establece obligatoriamente CURRENT_DATE al insertar una transferencia.
+Para mantener la coherencia temporal entre las
+transferencias y las ventas, el generador conserva:
 
-Como consecuencia, PostgreSQL asigna la fecha de ejecución, independientemente de la fecha que intente proporcionar el generador.
+`fecha_venta = date.today()`
 
-Si los comprobantes utilizan una fecha histórica fija y las transferencias utilizan la fecha actual, podrían registrarse ventas anteriores al abastecimiento de mercadería.
+### 4.2. Alcance de la reproducibilidad
 
-Por este motivo, se mantiene temporalmente la fecha actual para los comprobantes, respetando el comportamiento de la RN-11.
+La semilla fija permite reproducir los datos
+sintéticos y sus relaciones bajo las mismas
+condiciones de ejecución.
 
-**Estado:** pendiente de acuerdo con el grupo.
+Sin embargo, las fechas automáticas dependen del
+día en que se realiza la carga.
 
-Se deberá definir una solución que permita realizar pruebas reproducibles sin alterar indebidamente las reglas de negocio implementadas en las etapas anteriores.
+Por lo tanto, la reproducibilidad determinística
+no incluye las fechas automáticas relacionadas
+con la regla RN-11.
 
+### 4.3. Decisión adoptada
+
+Se mantiene `date.today()` para los comprobantes
+y se respeta el comportamiento original del
+trigger RN-11 para las transferencias.
+
+No se modifican los archivos compartidos:
+
+- `database/migrations/001_esquema.sql`
+- `database/migrations/005_triggers.sql`
+
+La decisión sobre el tratamiento de fechas
+queda resuelta y documentada.
 
 ## 5. Ejecución definitiva con catálogos CSV
 
@@ -301,5 +331,198 @@ La ejecución definitiva con los CSV actualizados
 finalizó correctamente y cumplió los requisitos
 de cantidad e integridad verificados.
 
-La reproducibilidad completa de las fechas
-continúa pendiente del acuerdo sobre la RN-11.
+La generación utiliza una semilla fija para los
+datos sintéticos, pero las fechas de transferencias
+y comprobantes corresponden al día real de ejecución,
+según la decisión documentada en la sección 4.
+
+
+### 5.6. Nueva ejecución definitiva y verificación del respaldo
+
+El 09/11/2026 se ejecutó nuevamente el generador
+actualizado, utilizando los catálogos CSV actuales
+y `MODO_PRUEBA = False`.
+
+La ejecución se realizó en una base aislada:
+
+`bodegas_etapa3_validacion_final`
+
+Se aplicaron las siete migraciones de las Etapas 1 y 2
+sobre una base vacía, obteniendo 29 tablas.
+
+La carga finalizó correctamente, con código de salida 0,
+en aproximadamente 5 minutos y 19 segundos.
+
+Resultados principales:
+
+| Tabla | Registros |
+|---|---:|
+| comprobante | 150.000 |
+| renglon_comprobante | 500.000 |
+| cliente | 20.000 |
+| transferencia | 2.000 |
+| cepa | 8 |
+| maridaje | 7 |
+
+Las validaciones confirmaron:
+
+- Stocks no negativos.
+- Importes de comprobantes consistentes.
+- Integridad referencial sin inconsistencias.
+- Datos confirmados correctamente en PostgreSQL.
+
+#### Generación del respaldo actualizado
+
+Se ejecutaron los siguientes comandos:
+
+```powershell
+docker exec bodegas-etapa3-test pg_dump -U postgres -d bodegas_etapa3_validacion_final --clean --if-exists -f /tmp/dump_etapa3_validacion_final.sql
+
+docker exec bodegas-etapa3-test gzip -f /tmp/dump_etapa3_validacion_final.sql
+```
+
+El respaldo generado fue:
+
+`/tmp/dump_etapa3_validacion_final.sql.gz`
+
+Tamaño aproximado: 7,8 MB.
+
+#### Restauración en una base nueva
+
+Se creó una base descartable independiente:
+
+```powershell
+docker exec bodegas-etapa3-test createdb -U postgres bodegas_etapa3_restauracion_final
+```
+
+Se descomprimió el respaldo:
+
+```powershell
+docker exec bodegas-etapa3-test sh -c 'gzip -dc /tmp/dump_etapa3_validacion_final.sql.gz > /tmp/dump_etapa3_restauracion_final.sql'
+```
+
+Y se restauró:
+
+```powershell
+docker exec bodegas-etapa3-test psql -X -v ON_ERROR_STOP=1 -U postgres -d bodegas_etapa3_restauracion_final -f /tmp/dump_etapa3_restauracion_final.sql
+```
+
+La restauración finalizó sin errores.
+
+#### Verificación de la restauración
+
+Se compararon la base original y la restaurada.
+
+Resultados:
+
+- 29 tablas presentes en ambas bases.
+- 0 diferencias en las cantidades de registros.
+- 0 diferencias en las huellas de contenido calculadas
+  para las 29 tablas, independientemente del orden de filas.
+- 13 secuencias con los mismos valores de `last_value`
+  e `is_called`.
+
+Los hashes SHA-256 de dos exportaciones completas
+realizadas mediante `pg_dump --data-only` no coincidieron.
+
+Sin embargo, las verificaciones posteriores de registros
+y secuencias no detectaron diferencias. La causa exacta
+de la diferencia entre las exportaciones no fue determinada.
+
+La comparación del contenido de las tablas quedó registrada en:
+
+`docs/evidencias_etapa3/comparacion_restauracion.csv`
+
+La salida de la nueva carga definitiva quedó registrada en:
+
+`docs/evidencias_etapa3/carga_definitiva_actualizada.txt`
+
+Todas estas operaciones se realizaron en bases aisladas,
+sin modificar la base principal ni las reglas compartidas
+de la Etapa 2.
+
+
+## 6. Validaciones finales posteriores a las correcciones
+
+**Fecha:** 09/11/2026.
+
+Se ejecutaron las validaciones finales solicitadas
+para la integración de la Etapa 3.
+
+### 6.1. Validaciones del código
+
+Se ejecutaron los siguientes comandos:
+
+```powershell
+python -m py_compile database/seed/etapa3.py database/seed/benchmark_etapa3.py
+git diff --check
+```
+
+Ambos finalizaron sin errores.
+
+### 6.2. Nueva carga reducida
+
+Se preparó una base de datos aislada:
+
+`bodegas_etapa3_validacion_reducida_final`
+
+Se aplicaron las siete migraciones correspondientes
+a las Etapas 1 y 2.
+
+La base contenía 29 tablas vacías antes de ejecutar
+el generador.
+
+Se utilizó `MODO_PRUEBA = True`.
+
+**Duración:** 44,65 segundos.
+
+**Código de salida:** 0.
+
+| Componente | Registros |
+|---|---:|
+| comprobante | 100 |
+| renglon_comprobante | 350 |
+| cepa | 8 |
+| maridaje | 7 |
+| cliente | 20.000 |
+| ingreso | 2.000 |
+| transferencia | 2.000 |
+| renglon_transferencia | 10.907 |
+
+### 6.3. Validaciones de integridad
+
+El generador confirmó:
+
+- Lectura e inserción de los catálogos CSV.
+- Cantidades de registros verificadas.
+- Stocks no negativos.
+- Importes de comprobantes consistentes.
+- Comprobantes sin cliente: 0.
+- Renglones sin comprobante: 0.
+- Transferencias sin sala: 0.
+- Lotes sin parcela: 0.
+- Composiciones incorrectas: 0.
+- Transacción confirmada correctamente.
+
+### 6.4. Restauración del respaldo actualizado
+
+La restauración del respaldo definitivo fue
+verificada previamente sobre la base aislada
+`bodegas_etapa3_restauracion_final`.
+
+Se comprobaron las cantidades y huellas de
+contenido de las 29 tablas y los valores de
+las 13 secuencias, sin detectar diferencias.
+
+Los procedimientos y resultados están
+documentados en la sección 5.6.
+
+### 6.5. Evidencia
+
+La salida de la carga reducida se encuentra en:
+
+`docs/evidencias_etapa3/carga_reducida_final.txt`
+
+Las pruebas se realizaron sin modificar la
+base principal ni las reglas compartidas
+de las Etapas 1 y 2.

@@ -318,40 +318,123 @@ Los conteos recuperados fueron:
 La restauración finalizó correctamente y los
 conteos principales coincidieron con el origen.
 
-El respaldo definitivo deberá generarse nuevamente
-después de ejecutar y validar la versión actualizada
-del generador.
+
+### Respaldo definitivo actualizado
+
+El 09/11/2026 se generó un nuevo respaldo después
+de ejecutar la carga masiva definitiva con los
+catálogos CSV actuales.
+
+Base de origen:
+
+`bodegas_etapa3_validacion_final`
+
+Base utilizada para la restauración:
+
+`bodegas_etapa3_restauracion_final`
+
+La restauración finalizó correctamente.
+
+Se verificaron las cantidades y las huellas
+de contenido de las 29 tablas, sin detectar
+diferencias.
+
+También se comprobaron los valores de las
+13 secuencias, que coincidieron entre ambas bases.
+
+Los comandos ejecutados y los resultados están
+documentados en:
+
+`docs/etapa3_carga_masiva.md`, sección 5.6.
 
 Los archivos .sql.gz no deben subirse a GitHub.
 
 
+
 ## 12. Reproducibilidad
 
-El generador utiliza una semilla fija para producir
-datos sintéticos de manera determinística.
+El generador utiliza una semilla fija para permitir
+la reproducción determinística de los datos
+sintéticos, sus cantidades y relaciones, siempre
+que se mantengan las mismas condiciones de ejecución.
 
-Existe una limitación relacionada con las fechas:
-el trigger de la RN-11, implementado en la Etapa 2,
-asigna CURRENT_DATE a las transferencias.
+### 12.1. Fechas automáticas y RN-11
 
-Por lo tanto, las fechas automáticas pueden variar
-entre ejecuciones realizadas en días diferentes.
+Las fechas de las transferencias y los comprobantes
+corresponden al día real de ejecución.
 
-Esta situación está pendiente de resolución con
-el grupo. No se deben modificar los triggers
-compartidos sin coordinación previa.
+La regla de negocio RN-11, implementada mediante
+un trigger de PostgreSQL en la Etapa 2, establece
+obligatoriamente `CURRENT_DATE` para las
+transferencias.
+
+Para mantener la coherencia temporal entre las
+transferencias y las ventas, el generador conserva:
+
+`fecha_venta = date.today()`
+
+### 12.2. Alcance de la reproducibilidad
+
+La semilla fija permite reproducir los datos
+sintéticos y sus relaciones bajo las mismas
+condiciones de ejecución.
+
+Sin embargo, las fechas automáticas relacionadas
+con RN-11 pueden variar cuando la carga se realiza
+en días diferentes.
+
+Por lo tanto, la reproducibilidad determinística
+no incluye dichas fechas automáticas.
+
+### 12.3. Decisión adoptada
+
+Se acordó mantener `date.today()` para los
+comprobantes y respetar el comportamiento
+original del trigger RN-11.
+
+No se modifican los archivos compartidos:
+
+- `database/migrations/001_esquema.sql`
+- `database/migrations/005_triggers.sql`
+
+La decisión queda resuelta y documentada.
+
+
 
 ## 13. Resultados y evidencia
 
-Los resultados de las cargas, los controles de
-integridad y las mediciones de rendimiento se
-documentan en:
+Los resultados de las cargas, las validaciones
+de integridad y las mediciones de rendimiento
+se documentan en:
 
 `docs/etapa3_carga_masiva.md`
 
-Los resultados registrados antes de incorporar
-los catálogos CSV deben distinguirse de las
-pruebas realizadas con la versión actualizada.
+### 13.1. Ejecución definitiva con CSV
+
+El 09/11/2026 se registró una ejecución completa
+del generador actualizado, utilizando los catálogos
+CSV del repositorio.
+
+Los resultados principales fueron:
+
+- 150.000 comprobantes generados.
+- 500.000 renglones de comprobante.
+- 20.000 clientes.
+- 2.000 ingresos procesados.
+- 2.000 transferencias procesadas.
+
+La ejecución finalizó con código de salida 0
+y las validaciones de integridad informaron
+cero inconsistencias.
+
+Estos resultados corresponden a la ejecución
+documentada de esa fecha. La correspondencia
+exacta con el código y los CSV de la entrega
+se confirmará mediante las validaciones finales.
+
+Los resultados anteriores a la incorporación
+de los catálogos CSV se conservan como
+antecedentes y se distinguen de esta ejecución.
 
 ## 14. Control de versiones
 

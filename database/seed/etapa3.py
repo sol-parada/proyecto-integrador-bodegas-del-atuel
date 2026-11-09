@@ -12,7 +12,7 @@ import os
 
 # CONFIGURACION GENERAL DE ETAPA 3
 
-MODO_PRUEBA = False
+MODO_PRUEBA = True
 
 TOTAL_COMPROBANTES = 100 if MODO_PRUEBA else 150_000
 TOTAL_RENGLONES = 350 if MODO_PRUEBA else 500_000
@@ -66,9 +66,9 @@ DB_CONFIG = {
 def generar_carga_nivel_0(cur):
     """Inserta los datos del Nivel 0 adaptados a las tablas de Santiago"""
     print("--- Cargando Nivel 0 ---")
-    
+
     # 1. Localidades (codigo_postal PK, nombre, provincia, encargado_regional)
-    
+
     # 1. LOCALIDADES
     # Catálogo inicial de localidades reales de Mendoza.
     # Los códigos postales se utilizan como identificadores.
@@ -95,7 +95,7 @@ def generar_carga_nivel_0(cur):
 
     print("✓ Localidades cargadas")
 
-    
+
     # 2. Cepas (nombre, tipo) -> tipo_cepa es un enum o varchar según su esquema
     cepas = [
         (
@@ -122,7 +122,7 @@ def generar_carga_nivel_0(cur):
     """Cada variedad queda asociada con su tipo correcto, se respeta el ENUM tipo_cepa de PostgreSQL, no se generan clasificaciones
     aleatorias incorrectas y se evita duplicar nombres de cepas."""
     #Coordinar con RENATA los CVS definitivos.
-    
+
     # 3. Bodegas
     # Datos sintéticos con CUIT de 11 dígitos.
     # El esquema valida el formato, no el dígito verificador.
@@ -156,10 +156,10 @@ def generar_carga_nivel_0(cur):
 
     print("✓ Bodegas cargadas")
 
-    """Acá se generan 10 bodegas ficticias para las pruebas, se evita repetir CUIT dentro del lote generado, se respetan las columnas cuit, 
-    razon_social y domicilio, se mantienen la reproducibilidad mediante la semilla 42 y evita duplicados de CUIT si ejecutás nuevamente 
+    """Acá se generan 10 bodegas ficticias para las pruebas, se evita repetir CUIT dentro del lote generado, se respetan las columnas cuit,
+    razon_social y domicilio, se mantienen la reproducibilidad mediante la semilla 42 y evita duplicados de CUIT si ejecutás nuevamente
     esta inserción."""
-    
+
     # 4. Transportistas
     # Datos sintéticos respetando las restricciones de unicidad de CUIT y correo electrónico.
 
@@ -264,8 +264,8 @@ def generar_carga_nivel_0(cur):
     Todas las superficies son positivas, cumpliendo la RN-15.
     Utilizar departamentos reales de Mendoza.
     Mantener la semilla 42 para obtener valores reproducibles.
-    Un detalle importante es que finca tiene una clave primaria autogenerada, por lo que ON CONFLICT DO NOTHING no impide 
-    volver a insertar las mismas fincas si ejecutás nuevamente el script. 
+    Un detalle importante es que finca tiene una clave primaria autogenerada, por lo que ON CONFLICT DO NOTHING no impide
+    volver a insertar las mismas fincas si ejecutás nuevamente el script.
     """
 
     # 6. MARIDAJES
@@ -296,14 +296,14 @@ def generar_carga_nivel_0(cur):
 
     print("✓ Maridajes cargados")
     """
-    Lo hacemos asi porque usamos categorías de maridaje reconocibles en lugar de nombres aleatorios, también cada maridaje tiene 
-    una temperatura sugerida. Respetamos las columnas de 001_esquema.sql, evitamos duplicar nombres mediante ON CONFLICT (nombre) 
+    Lo hacemos asi porque usamos categorías de maridaje reconocibles en lugar de nombres aleatorios, también cada maridaje tiene
+    una temperatura sugerida. Respetamos las columnas de 001_esquema.sql, evitamos duplicar nombres mediante ON CONFLICT (nombre)
     DO NOTHING y los datos podrán utilizarse después en la tabla vino_maridaje.
     """
 
     #tenemos que incorporar los descuentos que acordaron con Santiago y preparar los datos para las ventas masivas.
 
-    
+
     # 7. CLIENTES: Generación de 20.000 clientes sintéticos.
     # RN-06: descuento según tipo de cliente.
     # Semilla fija para reproducibilidad.
@@ -369,11 +369,11 @@ def generar_carga_nivel_0(cur):
 * Evitamos repetir números de documento gracias a ON CONFLICT (nro_doc) DO NOTHING.
 
 Hay dos detalles del Nivel 0 que debemos tener presentes
-Primero: el código inserta explícitamente cliente.descuento. Eso es coherente con el acuerdo de Santiago, 
+Primero: el código inserta explícitamente cliente.descuento. Eso es coherente con el acuerdo de Santiago,
 pero la columna todavía depende de la migración que tenemos guardada en la rama de la Etapa 2 y del trigger de Sol.
 
-Segundo: si ejecuto el programa varias veces sobre la misma base, podrías duplicar fincas, porque ON CONFLICT DO NOTHING 
-no evita duplicados de datos cuando no existe una restricción de unicidad aplicable. Para la carga definitiva vamos a utilizar 
+Segundo: si ejecuto el programa varias veces sobre la misma base, podrías duplicar fincas, porque ON CONFLICT DO NOTHING
+no evita duplicados de datos cuando no existe una restricción de unicidad aplicable. Para la carga definitiva vamos a utilizar
 una estrategia reproducible sobre una base de prueba preparada.
 """
 
@@ -382,27 +382,27 @@ una estrategia reproducible sobre una base de prueba preparada.
 def generar_carga_nivel_1(cur):
     """Inserta los datos del Nivel 1 respetando claves foráneas y restricciones de negocio"""
     print("--- Cargando Nivel 1 ---")
-    
+
     # Obtenemos claves foráneas existentes del Nivel 0 para mantener la integridad referencial
     cur.execute("SELECT codigo_postal FROM localidad;")
     codigos_postales = [row[0] for row in cur.fetchall()]
-    
+
     cur.execute("SELECT id_finca FROM finca;")
     ids_fincas = [row[0] for row in cur.fetchall()]
-    
+
     cur.execute("SELECT id_cepa FROM cepa;")
     ids_cepas = [row[0] for row in cur.fetchall()]
-    
+
     cur.execute("SELECT cuit FROM bodega;")
     cuits_bodegas = [row[0] for row in cur.fetchall()]
-    
+
     cur.execute("SELECT codigo_transportista FROM transportista;")
     codigos_transportistas = [row[0] for row in cur.fetchall()]
 
     cur.execute("SELECT id_cliente FROM cliente;")
     ids_clientes = [row[0] for row in cur.fetchall()]
 
-    
+
     if (
         not codigos_postales
         or not cuits_bodegas
@@ -417,7 +417,7 @@ def generar_carga_nivel_1(cur):
         )
 
         """
-        raise ValueError interrumpe la ejecución y permite revertir la transacción si faltan datos esenciales. 
+        raise ValueError interrumpe la ejecución y permite revertir la transacción si faltan datos esenciales.
         Así evitamos guardar una carga parcial como si hubiera terminado correctamente.
         """
 
@@ -468,15 +468,15 @@ def generar_carga_nivel_1(cur):
     - Incluye todos los días posibles de cierre.
     - Evita repetir direcciones dentro del lote generado.
     - Mantiene la reproducibilidad mediante la semilla fija.
-    Importante: el esquema actual no tiene un UNIQUE para la dirección de las salas. 
-    Por eso, la prevención de duplicados ocurre en Python, no en PostgreSQL. La prueba final la haremos 
+    Importante: el esquema actual no tiene un UNIQUE para la dirección de las salas.
+    Por eso, la prevención de duplicados ocurre en Python, no en PostgreSQL. La prueba final la haremos
     sobre una base de pruebas preparada desde cero.
     """
 
 
-    
+
     # 2. PARCELAS
-    # Cada parcela pertenece a una finca (RN-04). La suma de superficies de las 
+    # Cada parcela pertenece a una finca (RN-04). La suma de superficies de las
     # parcelas no debe superar la superficie total de su finca.
 
     cur.execute("""
@@ -494,7 +494,7 @@ def generar_carga_nivel_1(cur):
         cantidad_parcelas = random.randint(8, 12)
 
         # Utilizamos el 80 % de la superficie total.
-        
+
         superficie_disponible = int(
             superficie_finca * Decimal("80")
         )
@@ -553,7 +553,7 @@ def generar_carga_nivel_1(cur):
     Se respeta la clave primaria compuesta (id_finca, nro_parcela).
     """
 
-    
+
     # 3. VINOS
     # Generación de vinos sintéticos.
     # Se respetan los tipos ENUM y las restricciones de precio, volumen y graduación alcohólica.
@@ -640,9 +640,9 @@ def generar_carga_nivel_1(cur):
     """
 
 
-    
+
     # 4. SUBTIPOS DE CLIENTES
-   
+
 
     # Obtener los clientes según su tipo registrado.
     cur.execute("""
@@ -750,7 +750,7 @@ def generar_carga_nivel_1(cur):
     """
 
 
-    
+
     # 5. TRANSPORTISTA_COBERTURA
 
     coberturas = []
@@ -791,7 +791,7 @@ def generar_carga_nivel_1(cur):
     - Evitar coberturas duplicadas.
     - Insertar las relaciones en la base de datos.
     """
-    
+
     # 6. INGRESOS DE MERCADERÍA
 
     CANTIDAD_INGRESOS = 2000
@@ -870,7 +870,7 @@ def generar_carga_nivel_2(cur):
 
     print("\n--- Cargando Nivel 2 ---")
 
-    
+
     # 1. EMPLEADOS
 
     cur.execute("""
@@ -938,7 +938,7 @@ def generar_carga_nivel_2(cur):
     - Evitar empleados duplicados.
     - Insertar los registros por lotes.
     """
-    
+
     # 2. LOTES DE UVA
 
     cur.execute("""
@@ -1025,7 +1025,7 @@ def generar_carga_nivel_2(cur):
     - Insertar los registros por lotes.
     """
 
-    
+
     # 3. COMPOSICIÓN DE VINOS
 
     cur.execute("""
@@ -1120,7 +1120,7 @@ def generar_carga_nivel_2(cur):
     - Insertar las composiciones por lotes.
     """
 
-    
+
     # 4. VINO_MARIDAJE
 
     cur.execute("""
@@ -1198,7 +1198,7 @@ def generar_carga_nivel_2(cur):
     - Insertar las relaciones por lotes.
     """
 
-    
+
     # 5. PERMISOS DE EXPORTACIÓN
 
     cur.execute("""
@@ -1276,9 +1276,9 @@ def generar_carga_nivel_2(cur):
     - Insertar los permisos por lotes.
     """
 
-    
+
     # 6. STOCK_DEPÓSITO
-    
+
     cur.execute("""
         SELECT cod_vino
         FROM vino
@@ -1326,9 +1326,9 @@ def generar_carga_nivel_2(cur):
     - Inicializar las cantidades en cero.
     - Evitar registros duplicados.
     - Preparar el inventario para futuros ingresos.
-    
+
     """
-   
+
     # 7. RENGLONES DE INGRESO
     # Carga masiva de botellas al depósito central
 
@@ -1386,7 +1386,7 @@ def generar_carga_nivel_2(cur):
         vinos_elegidos = random.sample(
             vinos_bodega,
             cantidad_vinos
-        )       
+        )
 
         for cod_vino in vinos_elegidos:
 
@@ -1501,9 +1501,9 @@ def generar_carga_nivel_2(cur):
     )
 
 
-    
+
     # 9. STOCK_SALA
-    
+
     cur.execute("""
         SELECT id_sala
         FROM sala_venta
@@ -1563,10 +1563,10 @@ def generar_carga_nivel_2(cur):
     - Inicializar las cantidades en cero.
     - Evitar registros duplicados.
     - Preparar el stock para futuras transferencias.
-    
+
     """
 
-    
+
     # 10. COMPROBANTES
 
     CANTIDAD_COMPROBANTES = TOTAL_COMPROBANTES
@@ -1622,10 +1622,12 @@ def generar_carga_nivel_2(cur):
         comprobantes_lote = []
 
         for i in range(cantidad_lote):
-
-            # RN-11: las transferencias se registran obligatoriamente con la fecha actual.
-            # Para esta primera carga de prueba, las ventas se generan el mismo día
-            # en que las salas reciben mercadería.
+            # REPRODUCIBILIDAD Y REGLA RN-11
+            # La semilla fija permite reproducir los datos sinteticos, sus cantidades y relaciones.
+            # Las fechas de transferencias y comprobantes dependen del dia real de ejecucion.
+            # Esto se debe a que la RN-11 establece CURRENT_DATE para las transferencias mediante un trigger.
+            # Se mantiene date.today() en los comprobantes para conservar la coherencia temporal entre ambas operaciones.
+            # No se modifican las reglas compartidas de la Etapa 2.
 
             fecha_venta = date.today()
 
@@ -1697,9 +1699,9 @@ def generar_carga_nivel_2(cur):
     # Las fechas históricas deberán coordinarse con las fechas de transferencia antes de ejecutar la carga definitiva.
 
 
-    
+
     # 11. AUDITORÍA DE PRECIOS
-    
+
     cur.execute("""
         SELECT COUNT(*)
         FROM auditoria_precio
@@ -1844,7 +1846,7 @@ def generar_carga_nivel_3(cur):
     """
     print("\n--- Cargando Nivel 3 ---")
 
-    
+
     # 1. ANÁLISIS DE CALIDAD
 
     cur.execute("""
@@ -2073,7 +2075,7 @@ def generar_carga_nivel_3(cur):
     # 3. RENGLONES DE COMPROBANTE - CARGA MASIVA
 
     OBJETIVO_COMPROBANTES = TOTAL_COMPROBANTES
-    OBJETIVO_RENGLONES = TOTAL_RENGLONES    
+    OBJETIVO_RENGLONES = TOTAL_RENGLONES
 
     print("Preparando la carga masiva de ventas...")
 
@@ -2113,7 +2115,7 @@ def generar_carga_nivel_3(cur):
             f"{len(comprobantes):,}."
         )
 
-    
+
     # VALIDACIÓN PREVIA DEL STOCK PARA VENTAS MASIVAS
 
     print("\n--- Validando stock disponible por sala ---")
@@ -2280,7 +2282,7 @@ def generar_carga_nivel_3(cur):
     )
 
     # INSERCION MASIVA DE RENGLONES DE COMPROBANTE
-    
+
     TAMANO_LOTE_VENTAS = 1000
     total_insertados = 0
 
@@ -2373,7 +2375,7 @@ def validar_carga_masiva(cur):
             )
 
 
-    
+
     objetivo_comprobantes = TOTAL_COMPROBANTES
     objetivo_renglones = TOTAL_RENGLONES
     modo_prueba = MODO_PRUEBA
@@ -2429,7 +2431,7 @@ def validar_carga_masiva(cur):
         )
 
 
-    
+
     # Validar los mínimos generales.
     tablas_mayores_10000 = sum(
         cantidad > 10000 for cantidad in conteos.values()
@@ -2456,7 +2458,7 @@ def validar_carga_masiva(cur):
     print("✓ Stocks no negativos")
     print("✓ Importes de comprobantes consistentes")
 
-    
+
     # VALIDACIONES DE INTEGRIDAD REFERENCIAL
     print("\n--- Validando integridad referencial ---")
 
