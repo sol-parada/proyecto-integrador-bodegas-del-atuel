@@ -74,13 +74,17 @@ def generar_carga_nivel_0(cur):
     # Los códigos postales se utilizan como identificadores.
 
     localidades = [
-        ("5620", "General Alvear", "Mendoza", "Encargado General Alvear"),
-        ("5600", "San Rafael", "Mendoza", "Encargado San Rafael"),
-        ("5500", "Mendoza", "Mendoza", "Encargado Mendoza"),
-        ("5519", "Guaymallén", "Mendoza", "Encargado Guaymallén"),
-        ("5501", "Godoy Cruz", "Mendoza", "Encargado Godoy Cruz"),
-        ("5507", "Luján de Cuyo", "Mendoza", "Encargado Luján de Cuyo")
+        (
+            fila["codigo_postal"].strip(),
+            fila["nombre"].strip(),
+            fila["provincia"].strip(),
+            fila["encargado_regional"].strip(),
+        )
+        for fila in leer_csv("localidades.csv")
     ]
+
+    if not localidades:
+        raise ValueError("El catálogo localidades.csv está vacío.")
 
     execute_values(
         cur,

@@ -132,6 +132,7 @@ El generador utiliza archivos de la carpeta `data/`:
 - cepas.csv
 - maridajes.csv
 - departamentos.csv
+- localidades.csv
 
 Las rutas se calculan respecto de la ubicación del
 proyecto, por lo que no dependen de una carpeta
