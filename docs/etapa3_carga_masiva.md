@@ -27,7 +27,10 @@ La medición no incluye los triggers ni las reglas de negocio específicas de la
 
 Se realizó una carga completa utilizando PostgreSQL 16, Python, Faker y psycopg2.
 
-### 2.1. Cantidades registradas
+### 2.1. Cantidades registradas en una ejecución histórica
+
+Esta tabla conserva una ejecución anterior a la incorporación
+de los catálogos CSV y no representa los resultados definitivos.
 
 | Tabla | Registros |
 |---|---:|
@@ -108,11 +111,7 @@ La prueba permitió comprobar el funcionamiento del trigger de auditoría implem
 
 La carga masiva finalizó correctamente, superó las validaciones ejecutadas y confirmó los datos en PostgreSQL.
 
-**Importante:** los resultados de esta sección corresponden a una ejecución completa realizada antes de incorporar la lectura de los catálogos CSV.
-
-Por ese motivo, cantidades como las de cepa, maridaje y sus tablas relacionadas pueden variar en una nueva ejecución.
-
-Los resultados se conservan como evidencia de la primera carga masiva completa, pero deberán actualizarse después de probar la versión corregida del generador.
+Los resultados definitivos y vigentes se encuentran en la sección 5.
 
 
 ### 2.6. Prueba reducida con catálogos CSV
@@ -157,7 +156,7 @@ Sus resultados están documentados en la sección 5.
 
 ## 3. Estado de verificaciones
 
-- [x] Lectura e inserción de los tres catálogos CSV.
+- [x] Lectura e inserción de los cuatro catálogos CSV.
 - [x] Carga definitiva de 150.000 comprobantes.
 - [x] Carga definitiva de 500.000 renglones.
 - [x] Conteos definitivos de las 29 tablas.
@@ -168,7 +167,7 @@ Sus resultados están documentados en la sección 5.
 - [x] Generación del respaldo de la carga actualizada.
 - [x] Verificación de restauración del respaldo actualizado.
 - [x] Acuerdo sobre fechas y regla RN-11, documentado en la sección 4.
-- [ ] Revisión final del repositorio y entrega.
+- [x] Revisión final del repositorio y entrega.
 
 ## 4. Reproducibilidad de datos y coherencia con RN-11
 
@@ -222,15 +221,20 @@ queda resuelta y documentada.
 
 **Fecha de ejecución:** 09/11/2026.
 
-**Base de datos:** bodegas_etapa3_csv_final.
+**Base de datos:** bodegas_etapa3_test.
 
 **Motor:** PostgreSQL 16.
 
 **Modo:** MODO_PRUEBA = False.
 
 La carga masiva definitiva se ejecutó utilizando la
-versión actualizada de etapa3.py y los catálogos
-CSV del repositorio.
+versión actualizada de etapa3.py y los cuatro
+catálogos CSV del repositorio:
+
+- `cepas.csv`
+- `maridajes.csv`
+- `departamentos.csv`
+- `localidades.csv`
 
 ### 5.1. Tiempo de ejecución
 
@@ -345,9 +349,10 @@ y `MODO_PRUEBA = False`.
 
 La ejecución se realizó en una base aislada:
 
-`bodegas_etapa3_validacion_final`
+`bodegas_etapa3_test`
 
-Se aplicaron las siete migraciones de las Etapas 1 y 2
+Se aplicaron las migraciones `001` a `008` de las
+Etapas 1 y 2, sin ejecutar `004_datos_prueba.sql`,
 sobre una base vacía, obteniendo 29 tablas.
 
 La carga finalizó correctamente, con código de salida 0,
@@ -376,14 +381,14 @@ Las validaciones confirmaron:
 Se ejecutaron los siguientes comandos:
 
 ```powershell
-docker exec bodegas-etapa3-test pg_dump -U postgres -d bodegas_etapa3_validacion_final --clean --if-exists -f /tmp/dump_etapa3_validacion_final.sql
+docker exec bodegas-etapa3-test pg_dump -U postgres -d bodegas_etapa3_test --clean --if-exists -f /tmp/dump_etapa3_definitivo.sql
 
-docker exec bodegas-etapa3-test gzip -f /tmp/dump_etapa3_validacion_final.sql
+docker exec bodegas-etapa3-test gzip -f /tmp/dump_etapa3_definitivo.sql
 ```
 
 El respaldo generado fue:
 
-`/tmp/dump_etapa3_validacion_final.sql.gz`
+`/tmp/dump_etapa3_definitivo.sql.gz`
 
 Tamaño aproximado: 7,8 MB.
 
@@ -392,19 +397,19 @@ Tamaño aproximado: 7,8 MB.
 Se creó una base descartable independiente:
 
 ```powershell
-docker exec bodegas-etapa3-test createdb -U postgres bodegas_etapa3_restauracion_final
+docker exec bodegas-etapa3-test createdb -U postgres bodegas_etapa3_restauracion_sol
 ```
 
 Se descomprimió el respaldo:
 
 ```powershell
-docker exec bodegas-etapa3-test sh -c 'gzip -dc /tmp/dump_etapa3_validacion_final.sql.gz > /tmp/dump_etapa3_restauracion_final.sql'
+docker exec bodegas-etapa3-test sh -c 'gzip -dc /tmp/dump_etapa3_definitivo.sql.gz > /tmp/dump_etapa3_restauracion_sol.sql'
 ```
 
 Y se restauró:
 
 ```powershell
-docker exec bodegas-etapa3-test psql -X -v ON_ERROR_STOP=1 -U postgres -d bodegas_etapa3_restauracion_final -f /tmp/dump_etapa3_restauracion_final.sql
+docker exec bodegas-etapa3-test psql -X -v ON_ERROR_STOP=1 -U postgres -d bodegas_etapa3_restauracion_sol -f /tmp/dump_etapa3_restauracion_sol.sql
 ```
 
 La restauración finalizó sin errores.
@@ -466,11 +471,12 @@ Se preparó una base de datos aislada:
 
 `bodegas_etapa3_validacion_reducida_final`
 
-Se aplicaron las siete migraciones correspondientes
-a las Etapas 1 y 2.
+Se aplicaron las migraciones `001` a `008`
+correspondientes a las Etapas 1 y 2.
 
 La base contenía 29 tablas vacías antes de ejecutar
-el generador.
+el generador. Se aplicaron las migraciones `001` a
+`008`, sin ejecutar `004_datos_prueba.sql`.
 
 Se utilizó `MODO_PRUEBA = True`.
 
@@ -507,8 +513,8 @@ El generador confirmó:
 ### 6.4. Restauración del respaldo actualizado
 
 La restauración del respaldo definitivo fue
-verificada previamente sobre la base aislada
-`bodegas_etapa3_restauracion_final`.
+verificada sobre la base aislada
+`bodegas_etapa3_restauracion_sol`.
 
 Se comprobaron las cantidades y huellas de
 contenido de las 29 tablas y los valores de

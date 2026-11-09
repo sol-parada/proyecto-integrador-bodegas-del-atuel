@@ -328,11 +328,11 @@ catálogos CSV actuales.
 
 Base de origen:
 
-`bodegas_etapa3_validacion_final`
+`bodegas_etapa3_test`
 
 Base utilizada para la restauración:
 
-`bodegas_etapa3_restauracion_final`
+`bodegas_etapa3_restauracion_sol`
 
 La restauración finalizó correctamente.
 
