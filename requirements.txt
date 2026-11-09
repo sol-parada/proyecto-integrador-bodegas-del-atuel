@@ -1,0 +1,6 @@
+Faker
+psycopg2-binary
+
+Faker
+psycopg2-binary
+python-dotenv

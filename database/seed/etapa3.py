@@ -1,3 +1,6 @@
+import csv
+from pathlib import Path
+from dotenv import load_dotenv
 import sys
 import random
 from decimal import Decimal
@@ -21,6 +24,20 @@ Faker.seed(SEED)
 random.seed(SEED)
 
 FECHA_REFERENCIA_FIJA = date(2025, 1, 15)
+ROOT_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = ROOT_DIR / "data"
+
+
+def leer_csv(nombre_archivo):
+    ruta = DATA_DIR / nombre_archivo
+
+    if not ruta.is_file():
+        raise FileNotFoundError(
+            f"No se encontró el catálogo: {ruta}"
+        )
+
+    with ruta.open("r", encoding="utf-8-sig", newline="") as archivo:
+        return list(csv.DictReader(archivo))
 
 def reiniciar_generadores():
     random.seed(SEED)
@@ -29,16 +46,19 @@ def reiniciar_generadores():
     fake.unique.clear()
 
 # 2. Configuración de conexión a PostgreSQL
-# Las credenciales se obtienen de variables de entorno.
+# Las credenciales se obtienen de variables de entsorno.
+
+load_dotenv(ROOT_DIR / ".env")
 
 DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME", "bodegas_del_atuel"),
-    "user": os.getenv("DB_USER", "postgres"),
-    "password": os.getenv("DB_PASSWORD"),
+    "dbname": os.getenv("POSTGRES_DB", "bodegas_atuel"),
+    "user": os.getenv("POSTGRES_USER", "postgres"),
+    "password": os.getenv("POSTGRES_PASSWORD"),
     "host": os.getenv("DB_HOST", "localhost"),
-    "port": os.getenv("DB_PORT", "5432"),
-    "client_encoding": "UTF8"
+    "port": os.getenv("POSTGRES_PORT", "5432"),
+    "client_encoding": "UTF8",
 }
+
 
 # Porque las credenciales de PostgreSQL no deben quedar guardadas directamente en archivos que después se suben a GitHub.
 
@@ -78,19 +98,15 @@ def generar_carga_nivel_0(cur):
     
     # 2. Cepas (nombre, tipo) -> tipo_cepa es un enum o varchar según su esquema
     cepas = [
-        ("Malbec", "tinta"),
-        ("Cabernet Sauvignon", "tinta"),
-        ("Bonarda", "tinta"),
-        ("Syrah", "tinta"),
-        ("Merlot", "tinta"),
-        ("Tempranillo", "tinta"),
-        ("Pinot Noir", "tinta"),
-        ("Cabernet Franc", "tinta"),
-        ("Chardonnay", "blanca"),
-        ("Torrontés", "blanca"),
-        ("Sauvignon Blanc", "blanca"),
-        ("Chenin Blanc", "blanca")
+        (
+            fila["nombre"].strip(),
+            fila["tipo"].strip().lower()
+        )
+        for fila in leer_csv("cepas.csv")
     ]
+
+    if not cepas:
+        raise ValueError("El catálogo cepas.csv está vacío.")
     execute_values(
         cur,
         """
@@ -205,17 +221,15 @@ def generar_carga_nivel_0(cur):
 
 
     departamentos = [
-        "General Alvear",
-        "San Rafael",
-        "San Carlos",
-        "Tunuyán",
-        "Tupungato",
-        "Maipú",
-        "Luján de Cuyo",
-        "Rivadavia",
-        "Junín",
-        "San Martín"
+    fila["nombre_departamento"].strip()
+    for fila in leer_csv("departamentos.csv")
+    if fila["provincia"].strip().casefold() == "mendoza"
     ]
+
+    if not departamentos:
+        raise ValueError(
+            "departamentos.csv no contiene departamentos de Mendoza."
+    )
 
     fincas = []
 
@@ -259,19 +273,15 @@ def generar_carga_nivel_0(cur):
     # Las temperaturas se expresan en grados Celsius.
 
     maridajes = [
-        ("Carnes rojas", 17.0),
-        ("Carnes blancas", 12.0),
-        ("Pescados", 10.0),
-        ("Mariscos", 9.0),
-        ("Quesos duros", 16.0),
-        ("Quesos blandos", 12.0),
-        ("Pastas", 15.0),
-        ("Pizzas", 15.0),
-        ("Ensaladas", 10.0),
-        ("Postres", 8.0),
-        ("Chocolate", 16.0),
-        ("Frutos secos", 14.0)
+        (
+            fila["nombre"].strip(),
+            Decimal(fila["temp_servicio_sugerida_c"].strip())
+        )
+        for fila in leer_csv("maridajes.csv")
     ]
+
+    if not maridajes:
+        raise ValueError("El catálogo maridajes.csv está vacío.")
 
     execute_values(
         cur,
@@ -2515,40 +2525,49 @@ def validar_carga_masiva(cur):
 
 def verificar_base_vacia(cur):
     """
-    Comprueba que las tablas principales no tengan datos
-    antes de iniciar la carga masiva.
-
-    Evita duplicaciones y protege datos existentes.
+    Verifica que todas las tablas del esquema public estén vacías.
+    Evita ejecutar la carga sobre una base con datos previos,
+    incluso cuando existan registros en tablas secundarias.
     """
 
     print("\n--- Verificando base de datos ---")
 
-    tablas = [
-        "localidad",
-        "finca",
-        "bodega",
-        "cliente",
-        "vino",
-        "ingreso",
-        "transferencia",
-        "comprobante",
-        "renglon_comprobante"
-    ]
+    cur.execute("""
+        SELECT tablename
+        FROM pg_catalog.pg_tables
+        WHERE schemaname = 'public'
+        ORDER BY tablename
+    """)
+
+    tablas = [fila[0] for fila in cur.fetchall()]
+
+    if not tablas:
+        raise ValueError(
+            "No se encontraron tablas en el esquema public. "
+            "Primero deben ejecutarse las migraciones."
+        )
+
+    from psycopg2 import sql
 
     for tabla in tablas:
-        cur.execute(
-            f"SELECT EXISTS (SELECT 1 FROM public.{tabla})"
+        consulta = sql.SQL(
+            "SELECT EXISTS (SELECT 1 FROM {}.{})"
+        ).format(
+            sql.Identifier("public"),
+            sql.Identifier(tabla)
         )
+
+        cur.execute(consulta)
 
         if cur.fetchone()[0]:
             raise ValueError(
                 f"La tabla {tabla} ya contiene datos. "
-                "La carga masiva debe ejecutarse sobre "
-                "una base de prueba vacía."
+                "La carga masiva requiere una base vacía."
             )
 
-    print("✓ Base de datos preparada para la carga")
-
+    print(
+        f"✓ Base preparada: {len(tablas)} tablas verificadas"
+    )
 
 
 def probar_auditoria_precio(cur):

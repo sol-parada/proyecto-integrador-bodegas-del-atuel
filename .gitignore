@@ -46,3 +46,11 @@ coverage/
 
 # Archivos de configuración local
 docker-compose.override.yml
+
+# Archivos locales y respaldos de Etapa 3
+*.dump
+*.sql.gz
+*.log
+.env
+.env.*
+!.env.example
