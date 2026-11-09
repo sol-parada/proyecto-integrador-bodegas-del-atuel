@@ -1,4 +1,4 @@
--- Se usa después del fixture de santiago_tests, sólo en base descartable.
+-- Se usa después del fixture de pruebas_etapa2, sólo en base descartable.
 INSERT INTO finca(id_finca,nombre,superficie_ha,departamento,provincia) OVERRIDING SYSTEM VALUE
 VALUES (-901,'Prueba',6,'San Rafael','Mendoza');
 INSERT INTO parcela VALUES (-901,1,2,2000,-901),(-901,2,4,2000,-902);
