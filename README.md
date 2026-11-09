@@ -18,9 +18,9 @@ La base de datos permitirá representar las principales operaciones del negocio,
 - Transferencias de vinos hacia las salas de venta.
 - Control de stock.
 
-El proyecto busca aplicar los contenidos de la materia mediante una solución completa basada en PostgreSQL. En las etapas posteriores se incorporarán reglas de integridad, carga masiva de datos, consultas SQL, optimización, una API REST, un frontend y un despliegue en la nube.
+El proyecto busca aplicar los contenidos de la materia mediante una solución completa basada en PostgreSQL. Las reglas de integridad ya están implementadas dentro de PostgreSQL. En las etapas posteriores se incorporarán la carga masiva de datos, consultas SQL, optimización, una API REST, un frontend y un despliegue en la nube.
 
-Las reglas importantes del negocio estarán protegidas principalmente desde la base de datos, mediante claves, restricciones, funciones, procedimientos y triggers. De esta manera, la información se mantiene consistente independientemente de la aplicación que la utilice.
+Las reglas importantes del negocio están protegidas principalmente desde la base de datos, mediante claves, restricciones, funciones, procedimientos y triggers. De esta manera, la información se mantiene consistente independientemente de la aplicación que la utilice.
 
 ## Integrantes
 
@@ -37,33 +37,89 @@ Las reglas importantes del negocio estarán protegidas principalmente desde la b
 
 ## Estado actual
 
-El proyecto se encuentra en la **Etapa 1 — Modelado**.
+El proyecto completó la implementación inicial de las **Etapas 1 y 2**.
 
-Actualmente se está trabajando en:
+### Etapa 1 — Modelado
+
+La etapa incluye:
 
 - Diagrama entidad-relación.
-- Esquema relacional en tercera forma normal.
-- Diccionario de datos.
-- Justificación de las decisiones de diseño.
-- Script inicial `001_esquema.sql`.
-- Configuración de Docker y PostgreSQL.
+- Esquema físico en `database/migrations/001_esquema.sql`.
+- Tablas, claves primarias y foráneas.
+- Tipos enumerados y dominio para CUIT.
+- Relaciones con acciones referenciales.
+- Diccionario de datos actualizado.
+- Justificación de normalización y decisiones de diseño.
+- Configuración reproducible con Docker y PostgreSQL.
 
-El DER se encuentra en revisión, por lo que `001_esquema.sql` puede modificarse antes de considerarse definitivo.
+Documentación relacionada:
+
+- `docs/DER_Bodegas_del_Atuel.pdf/Untitled.pdf`
+- `docs/Informe_Etapa1.pdf/Diccionario de Datos - Bodegas del Atuel.pdf`
+- `docs/diccionario_de_datos.md`
+- `docs/pruebas-docker.md`
+
+El PDF histórico del diccionario se conserva como antecedente. La versión vigente
+en formato editable es `docs/diccionario_de_datos.md`.
+
+### Etapa 2 — Integridad y lógica
+
+La etapa incluye:
+
+- Restricciones de integridad en `002_constraints.sql`.
+- Funciones en `003_funciones.sql`.
+- Procedimientos en `004_procedimientos.sql`.
+- Triggers en `005_triggers.sql`.
+- Vistas en `006_vistas.sql`.
+- Roles y privilegios en `007_roles.sql`.
+- Índices en `008_indices.sql`.
+- Datos de prueba y scripts de validación.
+
+Las reglas de negocio se protegen principalmente dentro de PostgreSQL para
+mantener la consistencia independientemente de la aplicación cliente.
+
+### Próximas etapas
+
+Quedan pendientes:
+
+1. Carga masiva de datos.
+2. Índices y medición de rendimiento con datos reales.
+3. Consultas SQL de selección, inserción y eliminación.
+4. API REST.
+5. Frontend.
+6. Despliegue en la nube.
+7. Documentación final y defensa.
 
 ## Estructura actual
 
 ```text
-tpi-bodegas-del-atuel/
+Proyecto Bodegas del Atuel/
 ├── .env.example
 ├── .gitignore
 ├── compose.yaml
+├── README.md
+├── consultas/
+│   ├── select_avanzadas.sql
+│   └── update.sql
+├── data/
+│   ├── cepas.csv
+│   ├── departamentos.csv
+│   └── maridajes.csv
 ├── database/
-│   └── migrations/
-└── docs/
-    ├── DER_Bodegas_del_Atuel.pdf
-    ├── diccionario_de_datos.md
-    └── pruebas-docker.md
-```
+│   ├── migrations/
+│   │   ├── 001_esquema.sql
+│   │   ├── 002_constraints.sql
+│   │   ├── 003_funciones.sql
+│   │   ├── 004_datos_prueba.sql
+│   │   ├── 004_procedimientos.sql
+│   │   ├── 005_triggers.sql
+│   │   ├── 006_vistas.sql
+│   │   ├── 007_roles.sql
+│   │   └── 008_indices.sql
+│   └── tests/
+├── docs/
+├── scripts/
+└── tests/
 
 ## Configuración local
 
@@ -145,7 +201,8 @@ El comando `docker compose down -v` elimina también el volumen local y todos lo
 
 ## Prueba del esquema
 
-La prueba definitiva de `001_esquema.sql` se realizará cuando el equipo finalice la revisión del DER y actualice el modelo.
+La migración `001_esquema.sql` fue ejecutada correctamente sobre una base
+PostgreSQL vacía. La prueba se documenta en `docs/pruebas-docker.md`.
 
 La documentación de las pruebas se encuentra en:
 
@@ -177,13 +234,12 @@ git check-ignore -v .env
 
 ## Próximos pasos
 
-Después de finalizar la Etapa 1 se continuará con:
+Después de completar las Etapas 1 y 2 se continuará con:
 
-1. Restricciones y lógica en la base de datos.
-2. Carga masiva de datos.
-3. Índices y rendimiento.
-4. Consultas SQL.
-5. API REST.
-6. Frontend.
-7. Despliegue en la nube.
-8. Documentación y defensa final.
+1. Carga masiva de datos.
+2. Medición de índices y rendimiento con datos reales.
+3. Consultas SQL de selección, inserción y eliminación.
+4. API REST.
+5. Frontend.
+6. Despliegue en la nube.
+7. Documentación final y defensa.
