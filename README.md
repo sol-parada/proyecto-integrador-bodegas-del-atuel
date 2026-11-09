@@ -99,7 +99,7 @@ Proyecto Bodegas del Atuel/
 ├── compose.yaml
 ├── README.md
 ├── consultas/
-│   ├── select_avanzadas.sql
+│   ├── select.sql
 │   └── update.sql
 ├── data/
 │   ├── cepas.csv
