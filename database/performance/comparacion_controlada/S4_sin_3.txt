@@ -1,0 +1,30 @@
+﻿Limit  (cost=252.99..253.01 rows=5 width=12) (actual time=6.938..6.949 rows=5 loops=1)
+  Buffers: shared hit=77
+  ->  Sort  (cost=252.99..253.03 rows=15 width=12) (actual time=6.932..6.941 rows=5 loops=1)
+        Sort Key: (sum(rt.cantidad)) DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        Buffers: shared hit=77
+        ->  GroupAggregate  (cost=252.16..252.74 rows=15 width=12) (actual time=6.820..6.856 rows=15 loops=1)
+              Group Key: t.id_sala
+              Buffers: shared hit=74
+              ->  Sort  (cost=252.16..252.30 rows=58 width=8) (actual time=6.783..6.800 rows=58 loops=1)
+                    Sort Key: t.id_sala
+                    Sort Method: quicksort  Memory: 26kB
+                    Buffers: shared hit=74
+                    ->  Hash Join  (cost=199.20..250.46 rows=58 width=8) (actual time=5.313..6.685 rows=58 loops=1)
+                          Hash Cond: (t.numero_solicitud = rt.numero_solicitud)
+                          Buffers: shared hit=71
+                          ->  Seq Scan on transferencia t  (cost=0.00..46.00 rows=2000 width=8) (actual time=0.041..2.061 rows=2000 loops=1)
+                                Filter: (fecha_confeccion >= (CURRENT_DATE - '15 days'::interval))
+                                Buffers: shared hit=11
+                          ->  Hash  (cost=198.47..198.47 rows=58 width=8) (actual time=4.083..4.087 rows=58 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                Buffers: shared hit=60
+                                ->  Seq Scan on renglon_transferencia rt  (cost=0.00..198.47 rows=58 width=8) (actual time=0.143..4.012 rows=58 loops=1)
+                                      Filter: (cod_vino = 90)
+                                      Rows Removed by Filter: 11020
+                                      Buffers: shared hit=60
+Planning:
+  Buffers: shared hit=141
+Planning Time: 3.496 ms
+Execution Time: 7.185 ms

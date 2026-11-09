@@ -293,3 +293,140 @@ debido a que fueron ejecutadas nuevamente.
 - Comparar planes, tiempos, costos y buffers.
 - Evaluar índices utilizados y descartados.
 - Medir el costo de escritura.
+
+
+## 9. Prueba complementaria del índice por vino
+
+Se evaluó el índice idx_renglon_comprobante_vino
+mediante una consulta que obtiene la cantidad
+de botellas vendidas del vino con código 90.
+
+La consulta filtra la tabla renglon_comprobante,
+que contiene 500.000 registros.
+
+### Consulta utilizada
+
+```sql
+SELECT cod_vino,
+       SUM(cantidad) AS botellas_vendidas
+FROM renglon_comprobante
+WHERE cod_vino = 90
+GROUP BY cod_vino;
+```
+
+### Resultados
+
+Se realizaron cinco mediciones por configuración,
+alternando las bases con y sin índices adicionales.
+
+| Prueba | Sin índice (ms) | Con índice (ms) |
+|---|---:|---:|
+| 1 | 44,067 | 13,706 |
+| 2 | 65,958 | 13,401 |
+| 3 | 67,890 | 7,846 |
+| 4 | 59,730 | 12,170 |
+| 5 | 46,324 | 9,243 |
+| Mediana | 59,730 | 12,170 |
+
+Reducción observada del tiempo: 79,63 %.
+
+Factor de aceleración aproximado: 4,91 veces.
+
+### Análisis de los planes
+
+Sin el índice adicional, PostgreSQL utilizó
+Parallel Seq Scan sobre renglon_comprobante.
+
+Con el índice adicional, utilizó Bitmap Index Scan
+sobre idx_renglon_comprobante_vino, seguido de
+Bitmap Heap Scan.
+
+En la medición inicial, el costo estimado final
+disminuyó de 7774,12 a 3173,73.
+
+La consulta encontró 1.857 registros del vino 90.
+
+### Conclusión
+
+Los resultados de las mediciones repetidas
+mostraron una mejora considerable para la búsqueda
+selectiva por código de vino.
+
+Esta prueba demuestra la utilidad del índice
+idx_renglon_comprobante_vino para consultas
+que filtran por cod_vino.
+
+Se trata de una prueba complementaria, no de
+un reemplazo de la consulta S1 del enunciado.
+
+### Evidencia
+
+Los diez planes completos y los tiempos medidos
+se encuentran en:
+
+database/performance/prueba_indice_vino/
+
+
+## 10. Prueba del índice compuesto por sala y fecha
+
+Se evaluó el índice idx_comprobante_sala_fecha,
+definido sobre las columnas id_sala y fecha.
+
+La consulta calcula el monto total vendido en
+la sala 1 durante los últimos tres meses.
+
+### Consulta utilizada
+
+```sql
+SELECT id_sala, SUM(total) AS monto_total
+FROM comprobante
+WHERE id_sala = 1
+  AND fecha >= CURRENT_DATE - INTERVAL '3 months'
+GROUP BY id_sala;
+```
+
+### Mediciones
+
+| Prueba | Sin índice (ms) | Con índice (ms) |
+|---|---:|---:|
+| 1 | 22,490 | 11,478 |
+| 2 | 22,709 | 11,927 |
+| 3 | 21,418 | 9,381 |
+| 4 | 26,789 | 9,598 |
+| 5 | 27,707 | 9,535 |
+| Mediana | 22,709 | 9,598 |
+
+Reducción observada del tiempo: 57,73 %.
+
+Factor de aceleración aproximado: 2,37 veces.
+
+### Análisis de los planes
+
+Sin índices adicionales, PostgreSQL utilizó
+Parallel Seq Scan sobre comprobante.
+
+Con los índices adicionales, PostgreSQL utilizó
+Bitmap Index Scan sobre idx_comprobante_sala_fecha,
+seguido de Bitmap Heap Scan.
+
+El costo estimado final del plan inicial
+disminuyó de 4339,66 a 1910,22.
+
+La consulta encontró 10.000 comprobantes
+correspondientes a la sala 1.
+
+### Conclusión
+
+Las cinco mediciones mostraron una mejora
+consistente del rendimiento con los índices
+adicionales.
+
+El índice compuesto resulta útil para consultas
+que filtran por una sala determinada y un período.
+
+Esta es una variante filtrada de S8, utilizada
+como prueba complementaria del índice.
+
+Los planes y resultados se encuentran en:
+
+database/performance/prueba_indice_sala_fecha/

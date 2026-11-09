@@ -1,0 +1,28 @@
+﻿Sort  (cost=4548.10..4548.14 rows=15 width=36) (actual time=57.932..63.709 rows=15 loops=1)
+  Sort Key: (sum(total)) DESC
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=1570
+  ->  Finalize GroupAggregate  (cost=4545.78..4547.81 rows=15 width=36) (actual time=57.839..63.650 rows=15 loops=1)
+        Group Key: id_sala
+        Buffers: shared hit=1567
+        ->  Gather Merge  (cost=4545.78..4547.51 rows=15 width=36) (actual time=57.825..63.606 rows=30 loops=1)
+              Workers Planned: 1
+              Workers Launched: 1
+              Buffers: shared hit=1567
+              ->  Sort  (cost=3545.77..3545.81 rows=15 width=36) (actual time=52.452..52.455 rows=15 loops=2)
+                    Sort Key: id_sala
+                    Sort Method: quicksort  Memory: 26kB
+                    Buffers: shared hit=1567
+                    Worker 0:  Sort Method: quicksort  Memory: 26kB
+                    ->  Partial HashAggregate  (cost=3545.29..3545.48 rows=15 width=36) (actual time=52.400..52.409 rows=15 loops=2)
+                          Group Key: id_sala
+                          Batches: 1  Memory Usage: 24kB
+                          Buffers: shared hit=1560
+                          Worker 0:  Batches: 1  Memory Usage: 24kB
+                          ->  Parallel Seq Scan on comprobante  (cost=0.00..3104.12 rows=88235 width=12) (actual time=0.112..24.025 rows=75000 loops=2)
+                                Filter: (fecha >= (CURRENT_DATE - '3 mons'::interval))
+                                Buffers: shared hit=1560
+Planning:
+  Buffers: shared hit=153
+Planning Time: 0.931 ms
+Execution Time: 63.884 ms
