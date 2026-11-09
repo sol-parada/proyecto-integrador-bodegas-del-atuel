@@ -430,3 +430,223 @@ como prueba complementaria del índice.
 Los planes y resultados se encuentran en:
 
 database/performance/prueba_indice_sala_fecha/
+
+---
+
+## Costo de escritura con y sin índices adicionales
+
+### Objetivo
+
+Evaluar el costo de mantener índices adicionales al insertar
+registros en la tabla comprobante.
+
+La prueba se realizó en dos bases temporales independientes,
+creadas a partir de las bases de comparación de la Etapa 4:
+
+- etapa4_escritura_sin: sin índices adicionales.
+- etapa4_escritura_con: con los cinco índices de la migración 008.
+
+En particular, comprobante tiene dos índices adicionales:
+idx_comprobante_sala_fecha e idx_comprobante_fecha_incl.
+
+### Metodología
+
+Se ejecutaron cinco repeticiones alternadas en ambas bases,
+insertando 5.000 comprobantes mediante generate_series.
+
+Cada ejecución utilizó EXPLAIN (ANALYZE, BUFFERS) dentro
+de una transacción finalizada con ROLLBACK.
+
+Las inserciones utilizaron el cliente 1 y la sala 1,
+respetando las claves foráneas existentes.
+
+Se excluyó la primera ejecución exploratoria del cálculo
+de las medianas.
+
+### Resultados
+
+| Repetición | Sin índices (ms) | Con índices (ms) |
+|---|---:|---:|
+| 1 | 236,945 | 307,778 |
+| 2 | 192,563 | 226,663 |
+| 3 | 174,967 | 251,239 |
+| 4 | 190,813 | 260,847 |
+| 5 | 169,740 | 267,431 |
+| **Mediana** | **190,813** | **260,847** |
+
+El tiempo total de ejecución aumentó aproximadamente
+un 36,70 % al mantener los índices adicionales.
+
+### Comparación de operaciones y buffers
+
+| Indicador (mediana) | Sin índices | Con índices |
+|---|---:|---:|
+| Tiempo del nodo Insert (ms) | 53,797 | 128,847 |
+| Shared hit | 15.204 | 30.397 |
+| Shared dirtied | 55 | 83 |
+| Shared written | 55 | 83 |
+
+El tiempo del nodo Insert aumentó aproximadamente
+un 139,51 %.
+
+Los accesos a buffers en memoria prácticamente se duplicaron,
+mientras que los bloques modificados y escritos también
+aumentaron.
+
+### Interpretación
+
+Los índices adicionales requieren mantenimiento cuando
+se insertan nuevos registros.
+
+El tiempo total también incluye las verificaciones
+de claves foráneas, por lo que no representa exclusivamente
+el mantenimiento de los índices.
+
+Estas mediciones corresponden a INSERT sobre comprobante,
+donde intervienen dos índices adicionales. No representan
+el costo conjunto de escritura de los cinco índices
+de la Etapa 4.
+
+### Conclusión
+
+En las cinco repeticiones, la inserción de comprobantes
+mostró mayor tiempo total con los índices adicionales.
+
+Esto evidencia el compromiso entre acelerar consultas
+de lectura y aumentar el costo de las operaciones
+de escritura.
+
+Las pruebas se realizaron sobre bases temporales.
+No se modificaron los datos originales de la Etapa 3.
+
+
+---
+
+## Indice candidato evaluado y descartado
+
+### Indice propuesto
+
+```sql
+CREATE INDEX idx_comprobante_fecha_simple_prueba
+ON comprobante (fecha);
+```
+
+Se evaluo la posibilidad de incorporar un indice B-tree
+simple sobre fecha para acelerar consultas por periodo.
+
+### Prueba experimental
+
+El indice se creo dentro de una transaccion en la base
+temporal etapa4_escritura_con.
+
+Su tamano fue de 1.032 kB.
+
+Se analizo la siguiente consulta:
+
+```sql
+SELECT fecha, id_sala, total
+FROM comprobante
+WHERE fecha >= CURRENT_DATE - INTERVAL '3 months';
+```
+
+El resultado de EXPLAIN fue:
+
+```text
+Seq Scan on comprobante
+(cost=0.00..4422.00 rows=150000 width=20)
+```
+
+PostgreSQL no utilizo el indice candidato.
+
+### Justificacion del descarte
+
+Los 150.000 comprobantes de la carga tienen la misma fecha,
+por lo que el filtro temporal no es selectivo.
+
+En este escenario, PostgreSQL estima que un recorrido
+secuencial de la tabla es mas conveniente.
+
+Ademas, ya existe idx_comprobante_fecha_incl, cuyo primer
+campo es fecha y que incluye id_sala y total.
+
+El indice simple propuesto agregaria almacenamiento y
+costo de mantenimiento durante las escrituras, sin una
+mejora demostrada para la consulta evaluada.
+
+Por estos motivos, se descarta su incorporacion.
+
+La prueba se realizo con BEGIN y ROLLBACK.
+No se modifico la migracion 008_indices.sql.
+
+
+---
+
+## Sintesis final de rendimiento
+
+Se compararon las consultas S1, S4 y S8 mediante
+EXPLAIN (ANALYZE, BUFFERS), con cinco repeticiones
+por configuracion sobre bases equivalentes.
+
+| Consulta | Mediana sin indices (ms) | Mediana con indices (ms) | Costo final estimado | Recorrido principal | Filas finales |
+|---|---:|---:|---:|---|---:|
+| S1 | 171,066 | 163,235 | 8956,22 | Parallel Seq Scan | 10 |
+| S4 | 2,491 | 2,692 | 253,01 | Seq Scan | 5 |
+| S8 | 72,592 | 63,884 | 4548,14 | Parallel Seq Scan | 15 |
+
+Los costos estimados y recorridos principales se
+mantuvieron iguales entre ambas configuraciones.
+
+### Buffers observados
+
+- S1: en la tercera repeticion, sin indices se
+  registraron 2593 hit y 1610 read; con indices,
+  3011 hit y 1192 read. El total fue 4203.
+- S4: 77 shared hit en todas las repeticiones,
+  con y sin indices adicionales.
+- S8: 1570 shared hit en todas las repeticiones,
+  con y sin indices adicionales.
+
+Los planes individuales conservados en
+database/performance/comparacion_controlada/
+contienen los valores completos de cada ejecucion.
+
+### Justificacion de los recorridos secuenciales
+
+S1 agrupa ventas de todos los vinos y necesita
+procesar una gran cantidad de renglones.
+
+S4 trabaja con una tabla de 2000 transferencias
+cuyas fechas son iguales en la carga evaluada.
+
+S8 procesa los 150000 comprobantes porque todos
+pertenecen al periodo consultado.
+
+En estos escenarios, los filtros tienen baja
+selectividad y PostgreSQL prefiere los recorridos
+secuenciales y las agregaciones correspondientes.
+
+Las diferencias de tiempos observadas en S1 y S8
+no se atribuyen a los nuevos indices, porque los
+planes de acceso no cambiaron.
+
+Las pruebas complementarias por vino y por sala
+si mostraron uso efectivo de indices adicionales.
+
+### Balance final
+
+Los indices pueden mejorar las busquedas
+selectivas, pero no necesariamente las consultas
+que procesan una proporcion elevada de la tabla.
+
+La prueba de 5000 inserciones en comprobante
+registro medianas de 190,813 ms sin indices y
+260,847 ms con indices: un sobrecosto observado
+del 36,70 % en el tiempo total.
+
+Tambien se evaluo y descarto un indice simple
+sobre comprobante(fecha), por falta de mejora
+demostrada y por su costo adicional de mantenimiento.
+
+No se modificaron los datos originales de la
+Etapa 3 ni las reglas de negocio.
+
