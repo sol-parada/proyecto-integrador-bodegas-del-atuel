@@ -1,0 +1,39 @@
+﻿ETAPA 4 - TAREA 4
+EVIDENCIA DEL INDICE CANDIDATO DESCARTADO
+
+Base utilizada: etapa4_escritura_con
+
+Indice candidato:
+CREATE INDEX idx_comprobante_fecha_simple_prueba
+ON comprobante (fecha);
+
+Tamano observado: 1032 kB
+
+Consulta evaluada:
+SELECT fecha, id_sala, total
+FROM comprobante
+WHERE fecha >= CURRENT_DATE - INTERVAL '3 months';
+
+Plan obtenido con EXPLAIN:
+
+Seq Scan on comprobante
+  (cost=0.00..4422.00 rows=150000 width=20)
+  Filter: (fecha >= (CURRENT_DATE - '3 mons'::interval))
+
+Resultado:
+PostgreSQL no utilizo el indice candidato.
+
+Justificacion:
+Los 150000 comprobantes corresponden al mismo periodo,
+por lo que el filtro temporal no es selectivo.
+
+Ademas, ya existe idx_comprobante_fecha_incl,
+que tiene fecha como primera columna.
+
+El indice simple agregaria almacenamiento y mantenimiento
+sin una mejora demostrada para la consulta evaluada.
+
+La prueba original se realizo dentro de una transaccion
+finalizada con ROLLBACK.
+
+El indice candidato no se incorporo a 008_indices.sql.

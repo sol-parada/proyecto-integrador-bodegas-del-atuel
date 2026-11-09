@@ -128,8 +128,8 @@ cantidad de botellas vendidas.
 - Tiempo del plan guardado: 420,258 ms.
 - Costo estimado final: 8955,22.
 - Acceso principal: Parallel Seq Scan.
-- Buffers shared hit: 1780.
-- Buffers shared read: 2422.
+- Buffers shared hit: 1876.
+- Buffers shared read: 2326.
 - Tabla principal: renglon_comprobante.
 - Registros procesados: 500.000.
 
@@ -166,8 +166,8 @@ por sala durante el último trimestre.
 - Tiempo del plan guardado: 627,902 ms.
 - Costo estimado final: 8816,00.
 - Acceso principal: Parallel Seq Scan.
-- Buffers shared hit: 2475.
-- Buffers shared read: 3947.
+- Buffers shared hit: 2571.
+- Buffers shared read: 3851.
 - Tabla principal: comprobante.
 - Registros procesados: 150.000.
 
@@ -286,13 +286,105 @@ Las mediciones guardadas en estos archivos pueden
 tener tiempos diferentes a las mediciones iniciales,
 debido a que fueron ejecutadas nuevamente.
 
-## 8. Trabajos pendientes
 
-- Aplicar los cinco índices en una base de prueba.
-- Repetir las mediciones con índices.
-- Comparar planes, tiempos, costos y buffers.
-- Evaluar índices utilizados y descartados.
-- Medir el costo de escritura.
+## 8. Tarea 3 — Mediciones con índices adicionales
+
+### 8.1. Metodología
+
+Se comparó el rendimiento de S1, S4 y S8 utilizando
+dos bases equivalentes provenientes de la misma carga:
+
+- bodegas_etapa4_sin_indices
+- bodegas_etapa4_con_indices
+
+La segunda base contiene los cinco índices adicionales
+definidos en database/migrations/008_indices.sql.
+
+Se ejecutó ANALYZE y se realizaron cinco mediciones
+por consulta y configuración mediante
+EXPLAIN (ANALYZE, BUFFERS).
+
+Para reducir la influencia de valores extremos,
+se compararon las medianas de los tiempos registrados.
+
+### 8.2. Comparación de rendimiento
+
+| Consulta | Sin índices (ms) | Con índices (ms) | Diferencia |
+|---|---:|---:|---|
+| S1 | 171,066 | 163,235 | 4,58 % menor tiempo |
+| S4 | 2,491 | 2,692 | 8,07 % mayor tiempo |
+| S8 | 72,592 | 63,884 | 12,00 % menor tiempo |
+
+Los resultados corresponden a las cinco repeticiones
+controladas de cada configuración, y no deben confundirse
+con las mediciones exploratorias anteriores.
+
+### 8.3. Costos, recorridos y filas
+
+| Consulta | Costo final estimado sin/con índices | Recorrido principal | Filas devueltas |
+|---|---:|---|---:|
+| S1 | 8956,22 / 8956,22 | Parallel Seq Scan | 10 |
+| S4 | 253,01 / 253,01 | Seq Scan | 5 |
+| S8 | 4548,14 / 4548,14 | Parallel Seq Scan | 15 |
+
+En las tres consultas se mantuvieron los métodos
+principales de acceso y los costos estimados.
+
+S1 procesa 500.000 renglones de comprobantes.
+S4 examina 2.000 transferencias y 11.078 renglones.
+S8 procesa 150.000 comprobantes.
+
+### 8.4. Interpretación
+
+PostgreSQL no utilizó los índices adicionales
+en las tres consultas originales.
+
+S1 necesita agrupar ventas de todos los vinos.
+S4 trabaja con una cantidad relativamente pequeña
+de transferencias y fechas poco selectivas.
+S8 procesa todos los comprobantes porque pertenecen
+al período consultado.
+
+Por eso, los recorridos secuenciales resultaron
+convenientes para el planificador.
+
+Aunque S1 y S8 mostraron menores tiempos en la
+comparación, no es correcto atribuir esas diferencias
+a los índices adicionales porque los planes de acceso
+no cambiaron.
+
+### 8.5. Pruebas complementarias
+
+Se realizaron pruebas adicionales con filtros más
+selectivos y se observaron mejoras utilizando:
+
+- idx_renglon_comprobante_vino: 79,63 %.
+- idx_comprobante_sala_fecha: 57,73 %.
+
+Estas pruebas demuestran la utilidad de dichos
+índices en consultas específicas, pero no equivalen
+a tres mejoras en las consultas originales.
+
+### 8.6. Evidencias
+
+Los planes completos y las cinco repeticiones se
+encuentran en:
+
+database/performance/comparacion_controlada/
+
+Las pruebas complementarias están documentadas
+en las secciones siguientes de este informe.
+
+### 8.7. Observación sobre el criterio de aceptación
+
+Se completó la comparación de tres consultas
+con y sin índices adicionales.
+
+Sin embargo, no se demostraron mejoras atribuibles
+a los índices en las tres consultas originales.
+El criterio de aceptación referido a tres mejoras
+queda sujeto a revisión con el equipo.
+
 
 
 ## 9. Prueba complementaria del índice por vino
