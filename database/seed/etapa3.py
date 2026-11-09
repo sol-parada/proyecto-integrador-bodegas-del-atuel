@@ -7,6 +7,13 @@ import psycopg2
 from psycopg2.extras import execute_values
 import os
 
+# CONFIGURACION GENERAL DE ETAPA 3
+
+MODO_PRUEBA = False
+
+TOTAL_COMPROBANTES = 100 if MODO_PRUEBA else 150_000
+TOTAL_RENGLONES = 350 if MODO_PRUEBA else 500_000
+
 # 1. Configuración de reproducibilidad (Semilla y fecha fija según H3)
 SEED = 42
 fake = Faker('es_AR')
@@ -1552,7 +1559,7 @@ def generar_carga_nivel_2(cur):
     
     # 10. COMPROBANTES
 
-    CANTIDAD_COMPROBANTES = 100
+    CANTIDAD_COMPROBANTES = TOTAL_COMPROBANTES
     TAMANO_LOTE = 5000
 
     print(
@@ -2055,8 +2062,8 @@ def generar_carga_nivel_3(cur):
 
     # 3. RENGLONES DE COMPROBANTE - CARGA MASIVA
 
-    OBJETIVO_COMPROBANTES = 100
-    OBJETIVO_RENGLONES = 350
+    OBJETIVO_COMPROBANTES = TOTAL_COMPROBANTES
+    OBJETIVO_RENGLONES = TOTAL_RENGLONES    
 
     print("Preparando la carga masiva de ventas...")
 
@@ -2105,7 +2112,7 @@ def generar_carga_nivel_3(cur):
 
     for indice, (numero_comprobante, id_cliente, id_sala) in enumerate(comprobantes):
 
-        cantidad_vinos = 4 if indice < 50 else 3
+        cantidad_vinos = 4 if indice < (TOTAL_RENGLONES - 3 * TOTAL_COMPROBANTES) else 3
 
         demanda_por_sala[id_sala] = (
             demanda_por_sala.get(id_sala, 0) + cantidad_vinos
@@ -2173,7 +2180,7 @@ def generar_carga_nivel_3(cur):
 
         # 50.000 comprobantes con 4 vinos.
         # 100.000 comprobantes con 3 vinos.
-        cantidad_vinos = 4 if indice < 50 else 3
+        cantidad_vinos = 4 if indice < (TOTAL_RENGLONES - 3 * TOTAL_COMPROBANTES) else 3
 
         vinos_sala = stock_restante.get(id_sala, {})
 
@@ -2355,23 +2362,35 @@ def validar_carga_masiva(cur):
                 f"La tabla {tabla} quedó vacía."
             )
 
-    if conteos["comprobante"] != 100:
-        raise ValueError("Se esperaban 100 comprobantes.")
 
-    if conteos["renglon_comprobante"] != 350:
-        raise ValueError("Se esperaban 350 renglones.")
+    
+    objetivo_comprobantes = TOTAL_COMPROBANTES
+    objetivo_renglones = TOTAL_RENGLONES
+    modo_prueba = MODO_PRUEBA
 
-        # RN-09 y RN-11: stocks no negativos.
-        for tabla in ("stock_sala", "stock_deposito"):
-            cur.execute(
-                f"SELECT COUNT(*) FROM public.{tabla} "
-                "WHERE cantidad < 0"
-            )
+    # Verificar cantidades esperadas.
+    if conteos["comprobante"] != objetivo_comprobantes:
+        raise ValueError(
+            f"Se esperaban {objetivo_comprobantes} comprobantes."
+        )
+
+    if conteos["renglon_comprobante"] != objetivo_renglones:
+        raise ValueError(
+            f"Se esperaban {objetivo_renglones} renglones."
+        )
+
+    # RN-09 y RN-11: stocks no negativos.
+    for tabla in ("stock_sala", "stock_deposito"):
+        cur.execute(
+            f"SELECT COUNT(*) FROM public.{tabla} "
+            "WHERE cantidad < 0"
+        )
 
         if cur.fetchone()[0] != 0:
             raise ValueError(
                 f"Se detectó stock negativo en {tabla}."
             )
+
 
     # RN-08: verificar los importes almacenados.
     cur.execute("""
@@ -2399,20 +2418,29 @@ def validar_carga_masiva(cur):
             "con importes inconsistentes."
         )
 
+
+    
     # Validar los mínimos generales.
     tablas_mayores_10000 = sum(
         cantidad > 10000 for cantidad in conteos.values()
     )
 
-    if tablas_mayores_10000 < 3:
-        raise ValueError(
-            "Menos de tres tablas superan 10.000 filas."
+    if modo_prueba:
+        print(
+            "\n✓ Modo prueba reducido: "
+            "se omite únicamente el mínimo de volumen definitivo."
         )
+    else:
+        if tablas_mayores_10000 < 3:
+            raise ValueError(
+                "Menos de tres tablas superan 10.000 filas."
+            )
 
-    if max(conteos.values()) <= 100000:
-        raise ValueError(
-            "Ninguna tabla supera 100.000 filas."
-        )
+        if max(conteos.values()) <= 100000:
+            raise ValueError(
+                "Ninguna tabla supera 100.000 filas."
+            )
+
 
     print("\n✓ Conteos mínimos verificados")
     print("✓ Stocks no negativos")
