@@ -804,3 +804,52 @@ Por este motivo, se decidió incorporarlo definitivamente a `008_indices.sql`, c
 La prueba original se realizó en una base experimental y sus resultados se conservaron como evidencia.
 
 El nuevo índice mejora la consulta S4. Las otras dos mejoras documentadas corresponden a variantes filtradas de S1 y S8, por lo que deben distinguirse de las consultas globales originales al evaluar los criterios de aceptación.
+
+---
+
+## Resumen de las tres consultas con mejoras comprobadas
+
+La siguiente tabla reúne las tres consultas en las que se
+observó una reducción del tiempo de ejecución atribuible
+al uso de índices adicionales.
+
+Las mediciones se realizaron mediante
+EXPLAIN (ANALYZE, BUFFERS), utilizando cinco repeticiones
+por configuración y comparando las medianas.
+
+| Consulta evaluada | Índice utilizado | Sin índice (ms) | Con índice (ms) | Mejora |
+|---|---|---:|---:|---:|
+| Consulta complementaria: ventas del vino 90 | idx_renglon_comprobante_vino | 59,730 | 12,170 | 79,63 % |
+| Variante filtrada de S8: ventas de sala 1 en los últimos tres meses | idx_comprobante_sala_fecha | 22,709 | 9,598 | 57,73 % |
+| S4: salas con mayor cantidad solicitada del vino 90 | idx_renglon_transferencia_vino | 2,577 | 1,403 | 45,56 % |
+
+### Interpretación
+
+Las tres consultas mostraron mejoras medidas y cambios
+en los planes de ejecución al utilizar los índices.
+
+Las primeras dos son consultas complementarias que
+permiten evaluar filtros selectivos. No corresponden
+a las versiones globales originales de S1 y S8.
+
+La tercera corresponde a la consulta original S4,
+optimizada mediante el sexto índice incorporado
+a la migración 008_indices.sql.
+
+Las versiones originales de S1 y S8 fueron medidas
+por separado y sus diferencias de tiempo no se
+atribuyeron a los índices porque sus planes de acceso
+no cambiaron.
+
+### Evidencias
+
+Los planes completos están disponibles en:
+
+- database/performance/prueba_indice_vino/
+- database/performance/prueba_indice_sala_fecha/
+- database/performance/prueba_indice_s4/
+
+La comparación de las consultas originales S1, S4 y S8
+con los cinco índices iniciales permanece documentada
+en database/performance/comparacion_controlada/.
+
