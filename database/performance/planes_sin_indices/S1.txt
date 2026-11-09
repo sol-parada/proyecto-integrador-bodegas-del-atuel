@@ -1,0 +1,42 @@
+﻿                                                                                    QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=8955.20..8955.22 rows=10 width=30) (actual time=413.183..419.444 rows=10 loops=1)
+   Buffers: shared hit=1876 read=2326
+   ->  Sort  (cost=8955.20..8955.95 rows=300 width=30) (actual time=413.179..419.438 rows=10 loops=1)
+         Sort Key: (sum(rc.cantidad)) DESC
+         Sort Method: top-N heapsort  Memory: 26kB
+         Buffers: shared hit=1876 read=2326
+         ->  Finalize GroupAggregate  (cost=8872.71..8948.72 rows=300 width=30) (actual time=412.342..419.071 rows=300 loops=1)
+               Group Key: v.cod_vino
+               Buffers: shared hit=1873 read=2326
+               ->  Gather Merge  (cost=8872.71..8942.72 rows=600 width=30) (actual time=412.267..418.756 rows=900 loops=1)
+                     Workers Planned: 2
+                     Workers Launched: 2
+                     Buffers: shared hit=1873 read=2326
+                     ->  Sort  (cost=7872.69..7873.44 rows=300 width=30) (actual time=388.569..388.597 rows=300 loops=3)
+                           Sort Key: v.cod_vino
+                           Sort Method: quicksort  Memory: 41kB
+                           Buffers: shared hit=1873 read=2326
+                           Worker 0:  Sort Method: quicksort  Memory: 41kB
+                           Worker 1:  Sort Method: quicksort  Memory: 41kB
+                           ->  Partial HashAggregate  (cost=7857.34..7860.34 rows=300 width=30) (actual time=388.084..388.162 rows=300 loops=3)
+                                 Group Key: v.cod_vino
+                                 Batches: 1  Memory Usage: 61kB
+                                 Buffers: shared hit=1859 read=2326
+                                 Worker 0:  Batches: 1  Memory Usage: 61kB
+                                 Worker 1:  Batches: 1  Memory Usage: 61kB
+                                 ->  Hash Join  (cost=10.75..6815.68 rows=208333 width=26) (actual time=3.807..336.066 rows=166667 loops=3)
+                                       Hash Cond: (rc.cod_vino = v.cod_vino)
+                                       Buffers: shared hit=1859 read=2326
+                                       ->  Parallel Seq Scan on renglon_comprobante rc  (cost=0.00..6250.33 rows=208333 width=8) (actual time=3.311..211.571 rows=166667 loops=3)
+                                             Buffers: shared hit=1841 read=2326
+                                       ->  Hash  (cost=7.00..7.00 rows=300 width=22) (actual time=0.397..0.398 rows=300 loops=3)
+                                             Buckets: 1024  Batches: 1  Memory Usage: 24kB
+                                             Buffers: shared hit=12
+                                             ->  Seq Scan on vino v  (cost=0.00..7.00 rows=300 width=22) (actual time=0.078..0.276 rows=300 loops=3)
+                                                   Buffers: shared hit=12
+ Planning:
+   Buffers: shared hit=179
+ Planning Time: 10.986 ms
+ Execution Time: 420.258 ms
+(39 rows)
