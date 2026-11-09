@@ -1,0 +1,13 @@
+﻿GroupAggregate  (cost=134.55..1910.22 rows=1 width=36) (actual time=9.265..9.267 rows=1 loops=1)
+  Buffers: shared hit=1557
+  ->  Bitmap Heap Scan on comprobante  (cost=134.55..1886.25 rows=9585 width=12) (actual time=0.916..6.629 rows=10000 loops=1)
+        Recheck Cond: ((id_sala = 1) AND (fecha >= (CURRENT_DATE - '3 mons'::interval)))
+        Heap Blocks: exact=1547
+        Buffers: shared hit=1557
+        ->  Bitmap Index Scan on idx_comprobante_sala_fecha  (cost=0.00..132.15 rows=9585 width=0) (actual time=0.633..0.633 rows=10000 loops=1)
+              Index Cond: ((id_sala = 1) AND (fecha >= (CURRENT_DATE - '3 mons'::interval)))
+              Buffers: shared hit=10
+Planning:
+  Buffers: shared hit=133
+Planning Time: 0.867 ms
+Execution Time: 9.381 ms

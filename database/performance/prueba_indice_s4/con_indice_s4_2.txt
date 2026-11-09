@@ -1,0 +1,33 @@
+                                                                                  QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=120.16..120.17 rows=5 width=12) (actual time=1.326..1.330 rows=5 loops=1)
+   Buffers: shared hit=53
+   ->  Sort  (cost=120.16..120.19 rows=15 width=12) (actual time=1.324..1.326 rows=5 loops=1)
+         Sort Key: (sum(rt.cantidad)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         Buffers: shared hit=53
+         ->  HashAggregate  (cost=119.76..119.91 rows=15 width=12) (actual time=1.278..1.284 rows=15 loops=1)
+               Group Key: t.id_sala
+               Batches: 1  Memory Usage: 24kB
+               Buffers: shared hit=50
+               ->  Hash Join  (cost=68.20..119.47 rows=58 width=8) (actual time=0.340..1.252 rows=58 loops=1)
+                     Hash Cond: (t.numero_solicitud = rt.numero_solicitud)
+                     Buffers: shared hit=50
+                     ->  Seq Scan on transferencia t  (cost=0.00..46.00 rows=2000 width=8) (actual time=0.019..0.656 rows=2000 loops=1)
+                           Filter: (fecha_confeccion >= (CURRENT_DATE - '15 days'::interval))
+                           Buffers: shared hit=11
+                     ->  Hash  (cost=67.48..67.48 rows=58 width=8) (actual time=0.245..0.247 rows=58 loops=1)
+                           Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                           Buffers: shared hit=39
+                           ->  Bitmap Heap Scan on renglon_transferencia rt  (cost=4.73..67.48 rows=58 width=8) (actual time=0.042..0.223 rows=58 loops=1)
+                                 Recheck Cond: (cod_vino = 90)
+                                 Heap Blocks: exact=37
+                                 Buffers: shared hit=39
+                                 ->  Bitmap Index Scan on idx_renglon_transferencia_vino_prueba  (cost=0.00..4.72 rows=58 width=0) (actual time=0.024..0.024 rows=58 loops=1)
+                                       Index Cond: (cod_vino = 90)
+                                       Buffers: shared hit=2
+ Planning:
+   Buffers: shared hit=212
+ Planning Time: 1.381 ms
+ Execution Time: 1.548 ms
+(30 rows)

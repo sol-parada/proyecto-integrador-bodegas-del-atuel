@@ -1,0 +1,16 @@
+﻿Finalize GroupAggregate  (cost=1000.00..7774.12 rows=1 width=12) (actual time=49.534..59.506 rows=1 loops=1)
+  Buffers: shared hit=3320 read=848
+  ->  Gather  (cost=1000.00..7774.10 rows=2 width=12) (actual time=49.242..59.492 rows=3 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=3320 read=848
+        ->  Partial GroupAggregate  (cost=0.00..6773.90 rows=1 width=12) (actual time=37.184..37.185 rows=1 loops=3)
+              Buffers: shared hit=3320 read=848
+              ->  Parallel Seq Scan on renglon_comprobante  (cost=0.00..6772.17 rows=690 width=8) (actual time=1.205..36.973 rows=619 loops=3)
+                    Filter: (cod_vino = 90)
+                    Rows Removed by Filter: 166048
+                    Buffers: shared hit=3320 read=848
+Planning:
+  Buffers: shared hit=76
+Planning Time: 1.894 ms
+Execution Time: 59.730 ms

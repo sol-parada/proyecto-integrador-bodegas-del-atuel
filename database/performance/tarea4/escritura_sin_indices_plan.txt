@@ -1,0 +1,16 @@
+﻿BEGIN
+                                                         QUERY PLAN                                                          
+-----------------------------------------------------------------------------------------------------------------------------
+ Insert on comprobante  (cost=0.00..87.50 rows=0 width=0) (actual time=82.010..82.085 rows=0 loops=1)
+   Buffers: shared hit=15206 dirtied=60 written=56
+   ->  Function Scan on generate_series  (cost=0.00..87.50 rows=5000 width=68) (actual time=3.789..11.001 rows=5000 loops=1)
+         Buffers: shared hit=5009 dirtied=1
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 10.384 ms
+ Trigger for constraint comprobante_id_cliente_fkey: time=71.092 calls=5000
+ Trigger for constraint comprobante_id_sala_fkey: time=49.500 calls=5000
+ Execution Time: 206.013 ms
+(10 rows)
+
+ROLLBACK

@@ -1,0 +1,33 @@
+                                                                        QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=252.99..253.01 rows=5 width=12) (actual time=2.565..2.570 rows=5 loops=1)
+   Buffers: shared hit=77
+   ->  Sort  (cost=252.99..253.03 rows=15 width=12) (actual time=2.562..2.565 rows=5 loops=1)
+         Sort Key: (sum(rt.cantidad)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         Buffers: shared hit=77
+         ->  GroupAggregate  (cost=252.16..252.74 rows=15 width=12) (actual time=2.487..2.507 rows=15 loops=1)
+               Group Key: t.id_sala
+               Buffers: shared hit=74
+               ->  Sort  (cost=252.16..252.30 rows=58 width=8) (actual time=2.478..2.485 rows=58 loops=1)
+                     Sort Key: t.id_sala
+                     Sort Method: quicksort  Memory: 26kB
+                     Buffers: shared hit=74
+                     ->  Hash Join  (cost=199.20..250.46 rows=58 width=8) (actual time=1.596..2.428 rows=58 loops=1)
+                           Hash Cond: (t.numero_solicitud = rt.numero_solicitud)
+                           Buffers: shared hit=71
+                           ->  Seq Scan on transferencia t  (cost=0.00..46.00 rows=2000 width=8) (actual time=0.021..0.663 rows=2000 loops=1)
+                                 Filter: (fecha_confeccion >= (CURRENT_DATE - '15 days'::interval))
+                                 Buffers: shared hit=11
+                           ->  Hash  (cost=198.47..198.47 rows=58 width=8) (actual time=1.493..1.494 rows=58 loops=1)
+                                 Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                 Buffers: shared hit=60
+                                 ->  Seq Scan on renglon_transferencia rt  (cost=0.00..198.47 rows=58 width=8) (actual time=0.095..1.455 rows=58 loops=1)
+                                       Filter: (cod_vino = 90)
+                                       Rows Removed by Filter: 11020
+                                       Buffers: shared hit=60
+ Planning:
+   Buffers: shared hit=199
+ Planning Time: 1.663 ms
+ Execution Time: 2.727 ms
+(30 rows)
