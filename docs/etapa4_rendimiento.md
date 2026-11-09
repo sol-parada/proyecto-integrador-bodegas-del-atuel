@@ -742,3 +742,75 @@ demostrada y por su costo adicional de mantenimiento.
 No se modificaron los datos originales de la
 Etapa 3 ni las reglas de negocio.
 
+
+---
+
+## Prueba experimental de optimizacion S4
+
+### Objetivo
+
+Evaluar un indice adicional para optimizar la consulta
+S4, que identifica las cinco salas con mayor cantidad
+solicitada de un vino durante los ultimos 15 dias.
+
+### Indice experimental
+
+```sql
+CREATE INDEX idx_renglon_transferencia_vino_prueba
+ON renglon_transferencia (cod_vino);
+```
+
+El indice se creo exclusivamente en la base experimental
+etapa4_indice_s4_prueba, sin modificar la migracion 008.
+
+### Metodologia
+
+Se comparo la base con los cinco indices originales
+contra una copia equivalente que incorpora el indice
+experimental.
+
+Se realizaron cinco ejecuciones alternadas por
+configuracion con EXPLAIN (ANALYZE, BUFFERS).
+
+### Resultados
+
+| Repeticion | Sin indice experimental (ms) | Con indice experimental (ms) |
+|---|---:|---:|
+| 1 | 13,661 | 1,322 |
+| 2 | 2,577 | 1,548 |
+| 3 | 2,557 | 1,314 |
+| 4 | 2,727 | 1,420 |
+| 5 | 2,440 | 1,403 |
+| **Mediana** | **2,577** | **1,403** |
+
+Reduccion observada del tiempo de ejecucion: 45,56 %.
+
+### Analisis
+
+Sin el indice experimental, PostgreSQL utilizo Seq Scan
+sobre renglon_transferencia.
+
+Con el indice, PostgreSQL utilizo Bitmap Index Scan
+sobre idx_renglon_transferencia_vino_prueba, seguido
+de Bitmap Heap Scan.
+
+El costo estimado final disminuyo de 253,01 a 120,17.
+
+De los 11.078 renglones de transferencia,
+solamente 58 correspondian al vino 90.
+
+La mejora observada se relaciona con la mayor
+selectividad del filtro por cod_vino.
+
+### Evidencias
+
+Los diez planes completos se encuentran en:
+
+database/performance/prueba_indice_s4/
+
+### Estado
+
+Indice experimental evaluado favorablemente.
+Su incorporacion a 008_indices.sql queda pendiente
+de revision con Sol.
+
