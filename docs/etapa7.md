@@ -35,9 +35,7 @@ Las cinco pantallas mínimas que pide el TPI:
 | Alta y edición de vino | `/vinos/nuevo`, `/vinos/{cod}/editar` | Completa |
 | Nueva venta | `/ventas` | Completa |
 | Transferencias | `/transferencias` | Completa |
-| Tablero | `/tablero` | Completa |
-
-### Catálogo de vinos
+| Tablero | `/tablero` | Completa |### Catálogo de vinos
 
 Listado paginado con filtros por tipo, cepa, bodega y añada. El detalle
 muestra la composición con porcentajes, los maridajes y el stock total.
