@@ -40,13 +40,13 @@ def crear_comprobante(conexion, id_cliente, id_sala, renglones):
         with conexion.cursor(cursor_factory=RealDictCursor) as cursor:
 
             # Crear la cabecera.
-            # Los importes iniciales son cero porque
-            # los triggers calculan sus valores reales.
+            # Los importes usan sus valores por defecto (cero)
+            # y los triggers calculan los totales reales.
             cursor.execute(
                 """
                 INSERT INTO comprobante
-                    (id_cliente, id_sala, subtotal, descuento, total)
-                VALUES (%s, %s, 0, 0, 0)
+                    (id_cliente, id_sala)
+                VALUES (%s, %s)
                 RETURNING numero_comprobante
                 """,
                 (id_cliente, id_sala),
