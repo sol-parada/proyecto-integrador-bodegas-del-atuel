@@ -36,7 +36,6 @@ def put_cliente(id_cliente: int, data: ClienteUpdate) -> Cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return row
 
-
 @router.delete("/{id_cliente}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_cliente(id_cliente: int) -> None:
     if not eliminar_cliente(id_cliente):
