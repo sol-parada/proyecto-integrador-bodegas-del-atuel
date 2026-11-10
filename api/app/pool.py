@@ -11,8 +11,8 @@ def initialize_pool() -> None:
 
     if _pool is None:
         _pool = ThreadedConnectionPool(
-            minconn=1,
-            maxconn=10,
+            minconn=settings.pool_min,
+            maxconn=settings.pool_max,
             dbname=settings.db_name,
             user=settings.db_user,
             password=settings.db_password,
@@ -37,6 +37,21 @@ def get_connection():
 
 
 def release_connection(connection) -> None:
+    """
+    Devuelve la conexion al pool.
+
+    Se descarta cualquier transaccion pendiente: si queda una abierta, la
+    conexion vuelve al pool en estado 'idle in transaction' y bloquea a
+    otros usuarios hasta que se libere.
+    """
+
+    try:
+        if not connection.closed:
+            connection.rollback()
+    except Exception:
+        connection.close()
+        return
+
     if _pool is None:
         connection.close()
         return
