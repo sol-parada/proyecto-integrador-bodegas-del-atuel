@@ -264,3 +264,33 @@ Para verificar que `.env` está ignorado:
 ```powershell
 git check-ignore -v .env
 ```
+
+## Despliegue en la nube — Etapa 8
+
+El sistema está desplegado en Render.
+
+- Aplicación web: https://bodegas-del-atuel-web.onrender.com
+- API FastAPI: https://bodegas-del-atuel-api.onrender.com
+- Documentación interactiva: https://bodegas-del-atuel-api.onrender.com/docs
+
+### Arquitectura
+
+- Frontend: React, Vite y Render Static Site.
+- Backend: FastAPI desplegado como Web Service Docker.
+- Base de datos: PostgreSQL 16 en Render.
+- Comunicación cifrada mediante HTTPS y SSL para PostgreSQL.
+- Variables de entorno para configurar las conexiones.
+
+### Despliegue
+
+1. Crear PostgreSQL en Render.
+2. Aplicar las migraciones SQL 001 a 009.
+3. Cargar los datos mediante los scripts de `database/seed/`.
+4. Desplegar FastAPI mediante `api/Dockerfile` y configurar las variables de entorno.
+5. Crear un Static Site con directorio raíz `front/`.
+6. Utilizar `npm ci && npm run build` como comando de compilación y `dist` como directorio de publicación.
+7. Configurar `VITE_API_BASE_URL` con la URL pública del backend.
+8. Configurar CORS para permitir el origen del frontend.
+9. Verificar el catálogo, las reglas de negocio y la recuperación de backups.
+
+La documentación técnica y las evidencias se encuentran en `docs/etapa8-despliegue.md`.

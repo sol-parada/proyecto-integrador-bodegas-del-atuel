@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from psycopg2 import Error as PsycopgError
@@ -35,6 +36,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://bodegas-del-atuel-web.onrender.com"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept"],
+)
 
 @app.exception_handler(PsycopgError)
 async def postgres_error_handler(request: Request, error: PsycopgError) -> JSONResponse:
