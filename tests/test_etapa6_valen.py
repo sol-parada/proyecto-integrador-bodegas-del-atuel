@@ -234,3 +234,161 @@ def test_openapi_se_genera():
     assert "/comprobantes" in esquema["paths"]
     assert "/ingresos" in esquema["paths"]
     assert "/transferencias" in esquema["paths"]
+
+
+# --------------------------------------------------
+# PRUEBAS DE FALLOS TRANSACCIONALES
+# --------------------------------------------------
+
+def test_comprobante_fallido_propaga_error():
+    """
+    Simula un fallo al insertar un renglon.
+    La excepcion debe llegar al gestor de transaccion.
+    """
+    conexion, cursor = conexion_simulada()
+
+    cursor.fetchone.return_value = {
+        "numero_comprobante": 100
+    }
+
+    cursor.execute.side_effect = [
+        None,  # INSERT comprobante
+        RuntimeError("Error simulado en renglon"),
+    ]
+
+    with pytest.raises(
+        RuntimeError, match="Error simulado"
+    ):
+        crear_comprobante(
+            conexion,
+            1,
+            1,
+            [{"cod_vino": 1, "cantidad": 5}],
+        )
+
+    argumentos = conexion.__exit__.call_args.args
+
+    assert argumentos[0] is RuntimeError
+    assert isinstance(argumentos[1], RuntimeError)
+
+
+def test_ingreso_fallido_propaga_error():
+    """
+    Simula un error durante la carga de un ingreso.
+    """
+    conexion, cursor = conexion_simulada()
+
+    cursor.fetchone.return_value = {
+        "codigo_ingreso": 200
+    }
+
+    cursor.execute.side_effect = [
+        None,  # INSERT ingreso
+        RuntimeError("Error simulado en ingreso"),
+    ]
+
+    with pytest.raises(
+        RuntimeError, match="Error simulado"
+    ):
+        crear_ingreso(
+            conexion,
+            1,
+            "20123456789",
+            [{"cod_vino": 1, "cantidad": 10}],
+        )
+
+    argumentos = conexion.__exit__.call_args.args
+
+    assert argumentos[0] is RuntimeError
+    assert isinstance(argumentos[1], RuntimeError)
+
+
+# --------------------------------------------------
+# PRUEBAS HTTP Y SEGURIDAD
+# --------------------------------------------------
+
+from fastapi.testclient import TestClient
+
+
+def crear_cliente_pruebas():
+    """Crea una API de prueba sin conexion real a PostgreSQL."""
+    app = FastAPI()
+    app.include_router(crear_router(lambda: None))
+    return TestClient(app)
+
+
+def test_http_comprobante_sin_renglones():
+    cliente = crear_cliente_pruebas()
+
+    respuesta = cliente.post(
+        "/comprobantes",
+        json={
+            "id_cliente": 1,
+            "id_sala": 1,
+            "renglones": [],
+        },
+    )
+
+    assert respuesta.status_code == 422
+
+
+def test_http_ingreso_cantidad_negativa():
+    cliente = crear_cliente_pruebas()
+
+    respuesta = cliente.post(
+        "/ingresos",
+        json={
+            "codigo_transportista": 1,
+            "cuit_bodega": "20123456789",
+            "renglones": [
+                {"cod_vino": 1, "cantidad": -10}
+            ],
+        },
+    )
+
+    assert respuesta.status_code == 422
+
+
+def test_http_transferencia_codigo_vino_invalido():
+    cliente = crear_cliente_pruebas()
+
+    respuesta = cliente.post(
+        "/transferencias",
+        json={
+            "id_sala": 1,
+            "renglones": [
+                {"cod_vino": 0, "cantidad": 5}
+            ],
+        },
+    )
+
+    assert respuesta.status_code == 422
+
+
+def test_sql_parametrizado_en_comprobantes():
+    """
+    Verifica que el codigo de vino se envie como
+    parametro SQL y no concatenado en la consulta.
+    """
+    conexion, cursor = conexion_simulada()
+
+    cursor.fetchone.side_effect = [
+        {"numero_comprobante": 25},
+        {"numero_comprobante": 25, "total": 100},
+    ]
+    cursor.fetchall.return_value = []
+
+    crear_comprobante(
+        conexion,
+        1,
+        1,
+        [{"cod_vino": 5, "cantidad": 2}],
+    )
+
+    llamadas = cursor.execute.call_args_list
+
+    consulta_insert = llamadas[1].args[0]
+    parametros_insert = llamadas[1].args[1]
+
+    assert "%s" in consulta_insert
+    assert parametros_insert == (25, 5, 2)
