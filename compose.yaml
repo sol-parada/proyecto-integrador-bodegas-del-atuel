@@ -1,3 +1,17 @@
+# =============================================================================
+# BODEGAS DEL ATUEL - Docker Compose
+#
+# Un solo comando levanta el proyecto completo:
+#
+#   docker compose up -d --build
+#
+# Servicios:
+#   db       PostgreSQL 16 con los datos del proyecto.
+#   migrar   Aplica las migraciones y prepara el rol de la API (perfil 'setup').
+#   api      API REST en FastAPI, conectada con el rol app_api.
+#   front    Frontend React servido por Nginx, con proxy hacia la API.
+# =============================================================================
+
 services:
   db:
     image: postgres:16
@@ -16,6 +30,69 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # Aplica las migraciones y deja el rol de la API listo para conectarse.
+  # No queda ejecutándose: se usa una sola vez por despliegue.
+  migrar:
+    image: postgres:16
+    container_name: bodegas-atuel-migrar
+    profiles: ["setup"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      API_DB_PASSWORD: ${API_DB_PASSWORD}
+    volumes:
+      - ./database/migrations:/migrations:ro
+    entrypoint: >
+      bash -c "
+        set -euo pipefail
+        for f in /migrations/0*.sql; do
+          echo \"Aplicando \$$(basename \$$f)\"
+          psql -v ON_ERROR_STOP=1 -U ${POSTGRES_USER} -d ${POSTGRES_DB} \
+               -v api_password=\"$$API_DB_PASSWORD\" -f \"\$$f\"
+        done
+        echo 'Migraciones aplicadas.'
+      "
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: bodegas-atuel-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: 5432
+      DB_HOST: db
+      API_DB_USER: ${API_DB_USER}
+      API_DB_PASSWORD: ${API_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:${API_PORT}:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/salud')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: bodegas-atuel-front
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${FRONT_PORT}:80"
 
 volumes:
   etapa3_test_data:
