@@ -86,14 +86,20 @@ procesa, no al cargarla.
 
 ### Tablero
 
-Tres indicadores, todos con consultas de la sección 8 del TPI:
+Tablero de control con tres módulos, todos con consultas de la sección 8 del
+TPI:
 
-- Ranking de los 10 vinos más vendidos (S1).
-- Ventas por sala en el último trimestre (S8).
-- Vinos sin stock en la sala elegida con stock en el depósito central (S6).
+1. **Top 10 Vinos Más Vendidos** (S1): tabla con posición, nombre
+   comercial, tipo de vino y total de botellas vendidas.
+2. **Ventas por Sala (Último Trimestre)** (S8): una barra por sala con el
+   porcentaje sobre el total y el monto, más el total liquidado del
+   trimestre.
+3. **Vinos Agotados en Sala (Disponibles en Depósito Central)** (S6): tabla
+   con el stock en la sala y el disponible en el depósito, filtrable por
+   sala, y un enlace a la pantalla de transferencias para solicitar la
+   reposición.
 
-Los gráficos usan [Recharts](https://recharts.org), que dibuja en SVG sobre
-el mismo sistema de diseño del resto de la aplicación.
+El botón de sincronización recarga los indicadores.
 
 ---
 
@@ -265,9 +271,9 @@ alcanza con quitar esa clase.
 Cada variable guarda los canales R, G y B por separado para poder
 usarlos con opacidad (`rgb(var(--md-outline-variant) / 0.6)`).
 
-Los gráficos de Recharts dibujan en SVG y no aceptan clases de Tailwind:
-`TableroPage` lee los colores de las variables del tema y los relee
-cuando el tema cambia.
+Los gráficos de barras del tablero se dibujan con CSS: cada barra es un
+`div` cuyo ancho es el porcentaje de la sala sobre el total, de modo que no
+hace falta ninguna librería de gráficos y el bundle queda más liviano.
 
 ---
 

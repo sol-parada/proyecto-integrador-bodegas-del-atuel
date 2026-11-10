@@ -1,55 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ApiError } from '../../api/client'
 import { listarSalas } from '../../api/salas'
 import { topVinos, ventasPorSala, vinosSinStock } from '../../api/reportes'
 import type { Sala, TopVino, VentaPorSala, VinoSinStock } from '../../api/types'
 import { ErrorBanner } from '../../components/ui/ErrorBanner'
 import { MaterialIcon } from '../../components/ui/MaterialIcon'
-import { formatoPrecio } from '../../lib/format'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { TipoVinoBadge } from '../../components/ui/TipoVinoBadge'
+import { formatoCodigoVino, formatoPrecio } from '../../lib/format'
 
-/**
- * Recharts dibuja en SVG y no acepta clases de Tailwind, asi que los
- * colores del grafico se leen de las variables del tema. Al cambiar el
- * tema, las variables cambian y el grafico se entera.
- */
-function leerColor(nombre: string, respaldo: string): string {
-  if (typeof window === 'undefined') {
-    return respaldo
-  }
-
-  const valor = getComputedStyle(document.documentElement)
-    .getPropertyValue(nombre)
-    .trim()
-
-  if (!valor) {
-    return respaldo
-  }
-
-  const canales = valor.split(/\s+/).map(Number)
-
-  if (canales.length < 3 || canales.some(Number.isNaN)) {
-    return respaldo
-  }
-
-  return `rgb(${canales[0]} ${canales[1]} ${canales[2]})`
-}
-
-const COLOR_BARRA = '#800e13'
-const COLOR_BARRA_ALT = '#a8303a'
-
-function etiquetaSala(venta: VentaPorSala): string {
-  return `${venta.calle} ${venta.numero}`
-}
+const ETIQUETA_CLASS =
+  'font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider'
 
 export function TableroPage() {
   const [salas, setSalas] = useState<Sala[]>([])
@@ -59,71 +20,35 @@ export function TableroPage() {
   const [sinStock, setSinStock] = useState<VinoSinStock[]>([])
   const [error, setError] = useState<ApiError | null>(null)
   const [cargando, setCargando] = useState(true)
-  // Los colores del grafico se releen cuando cambia el tema.
-  const [colores, setColores] = useState({
-    barra: COLOR_BARRA,
-    barraAlt: COLOR_BARRA_ALT,
-    rejilla: '#e2e8f0',
-    texto: '#58413f',
-    fondo: '#fff',
-  })
+  const [ultimaCarga, setUltimaCarga] = useState('')
 
-  useEffect(() => {
-    const leer = () => {
-      setColores({
-        barra: leerColor('--md-primary-container', COLOR_BARRA),
-        barraAlt: leerColor('--md-primary', COLOR_BARRA_ALT),
-        rejilla: leerColor('--md-outline-variant', '#e2e8f0'),
-        texto: leerColor('--md-on-surface-variant', '#58413f'),
-        fondo: leerColor('--md-surface-container-lowest', '#fff'),
-      })
-    }
-
-    leer()
-
-    const observer = new MutationObserver(leer)
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    })
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [])
-
-  useEffect(() => {
-    let active = true
+  function cargarIndicadores() {
+    setCargando(true)
 
     Promise.all([listarSalas(), topVinos(), ventasPorSala()])
       .then(([datosSalas, datosTop, datosVentas]) => {
-        if (!active) {
-          return
-        }
         setSalas(datosSalas)
         setTop(datosTop)
         setVentas(datosVentas)
+        setUltimaCarga(new Date().toLocaleString('es-AR'))
+
         if (datosSalas.length > 0) {
-          setIdSala(datosSalas[0].id_sala)
+          setIdSala((actual) => actual || datosSalas[0].id_sala)
         }
       })
       .catch((err: unknown) => {
-        if (active) {
-          setError(
-            err instanceof ApiError ? err : new ApiError(0, 'No se pudo cargar el tablero.'),
-          )
-        }
+        setError(
+          err instanceof ApiError ? err : new ApiError(0, 'No se pudo cargar el tablero.'),
+        )
       })
       .finally(() => {
-        if (active) {
-          setCargando(false)
-        }
+        setCargando(false)
       })
+  }
 
-    return () => {
-      active = false
-    }
+  useEffect(() => {
+    cargarIndicadores()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -150,242 +75,330 @@ export function TableroPage() {
     }
   }, [idSala])
 
-  const datosTop = useMemo(
-    () =>
-      top.map((vino) => ({
-        nombre: vino.nombre.length > 22 ? `${vino.nombre.slice(0, 22)}…` : vino.nombre,
-        botellas: vino.botellas_vendidas,
-      })),
-    [top],
-  )
-
-  const datosVentas = useMemo(
-    () =>
-      ventas.map((venta) => ({
-        nombre: etiquetaSala(venta),
-        total: Number(venta.ventas_totales),
-      })),
-    [ventas],
-  )
-
   const totalTrimestre = useMemo(
     () => ventas.reduce((acumulado, venta) => acumulado + Number(venta.ventas_totales), 0),
     [ventas],
   )
 
-  const salaSeleccionada = useMemo(
-    () => salas.find((sala) => sala.id_sala === idSala),
-    [salas, idSala],
+  const ventaMayor = useMemo(
+    () => Math.max(...ventas.map((venta) => Number(venta.ventas_totales)), 0),
+    [ventas],
   )
 
+  function porcentaje(venta: VentaPorSala): number {
+    if (ventaMayor === 0) {
+      return 0
+    }
+
+    return (Number(venta.ventas_totales) / ventaMayor) * 100
+  }
+
   return (
-    <div className="flex flex-col gap-space-lg">
-      <header className="flex flex-col gap-space-xs">
-        <h1 className="font-headline-xl text-headline-xl text-on-surface">Tablero</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          Indicadores de la red de salas de venta.
-        </p>
+    <div className="flex flex-col w-full">
+      {/* Encabezado */}
+      <header className="mb-space-lg">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-md border-b border-outline-variant">
+          <div>
+            <nav
+              aria-label="Migas de pan"
+              className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-space-xs"
+            >
+              <span>Reportes</span>
+              <span className="text-outline">/</span>
+              <span>Control de Gestión</span>
+              <span className="text-outline">/</span>
+              <span className="text-primary font-semibold">Tablero de Control</span>
+            </nav>
+            <h1 className="font-headline-xl text-headline-xl text-on-surface tracking-tight">
+              Tablero de Control (Dashboard)
+            </h1>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-1">
+              Consultas operativas consolidadas y balance de existencias entre dependencias.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-space-lg bg-surface-container-lowest border border-outline-variant px-space-md py-space-sm rounded-lg self-start md:self-auto shadow-sm">
+            <div className="flex items-center gap-space-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <div className="flex flex-col">
+                <span className="font-label-sm text-label-sm text-on-surface font-semibold leading-tight">
+                  Sincronización con la base activa
+                </span>
+                <span className="font-tabular-data text-tabular-data text-on-surface-variant text-[11px] leading-tight">
+                  Última actualización: {ultimaCarga || '...'}
+                </span>
+              </div>
+            </div>
+            <button
+              aria-label="Actualizar los indicadores"
+              className="text-on-surface-variant hover:text-primary transition-colors"
+              onClick={cargarIndicadores}
+              title="Actualizar los indicadores"
+              type="button"
+            >
+              <MaterialIcon name="sync" className="text-[18px]" />
+            </button>
+          </div>
+        </div>
       </header>
 
       {error && <ErrorBanner detail={error.detail} sqlstate={error.sqlstate} />}
 
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-space-lg">
-        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-            Ventas del último trimestre
-          </span>
-          <span className="font-metric-lg text-metric-lg text-on-surface">
-            {formatoPrecio(totalTrimestre)}
-          </span>
-          <span className="font-body-sm text-body-sm text-on-surface-variant">
-            {ventas.length} salas con ventas
-          </span>
-        </div>
+      {/* Fila superior: ranking y ventas por sala */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-space-xl mb-space-xl">
+        <article className="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="p-space-md border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+              <div className="flex items-center gap-space-sm">
+                <MaterialIcon name="equalizer" className="text-primary text-[20px]" />
+                <h2 className="font-headline-md text-headline-md text-on-surface">
+                  Top 10 Vinos Más Vendidos
+                </h2>
+              </div>
+              <span className="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-2 py-0.5 rounded border border-field-border">
+                Acumulado total
+              </span>
+            </div>
 
-        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-            Vinos más vendidos
-          </span>
-          <span className="font-metric-lg text-metric-lg text-on-surface">{top.length}</span>
-          <span className="font-body-sm text-body-sm text-on-surface-variant">
-            En el ranking de toda la red
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-            Vinos sin stock
-          </span>
-          <span className="font-metric-lg text-metric-lg text-on-surface">{sinStock.length}</span>
-          <span className="font-body-sm text-body-sm text-on-surface-variant">
-            {salaSeleccionada
-              ? `En ${salaSeleccionada.calle} ${salaSeleccionada.numero}`
-              : 'Elegí una sala'}
-          </span>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-space-lg items-start">
-        <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
-          <h2 className="font-headline-md text-headline-md text-on-surface">
-            Top 10 vinos por botellas vendidas
-          </h2>
-
-          <div className="h-72">
-            <ResponsiveContainer height="100%" width="100%">
-              <BarChart data={datosTop} layout="vertical" margin={{ left: 8, right: 16 }}>
-                <CartesianGrid stroke={colores.rejilla} horizontal={false} />
-                <XAxis
-                  axisLine={false}
-                  tick={{ fill: colores.texto, fontSize: 11 }}
-                  tickLine={false}
-                  type="number"
-                />
-                <YAxis
-                  axisLine={false}
-                  dataKey="nombre"
-                  tick={{ fill: colores.texto, fontSize: 11 }}
-                  tickLine={false}
-                  type="category"
-                  width={140}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: colores.fondo,
-                    border: '1px solid ' + colores.rejilla,
-                    borderRadius: '0.25rem',
-                    fontSize: 12,
-                  }}
-                />
-                <Bar
-                  dataKey="botellas"
-                  fill={colores.barra}
-                  isAnimationActive={false}
-                  radius={[0, 2, 2, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
-          <h2 className="font-headline-md text-headline-md text-on-surface">
-            Ventas por sala en el último trimestre
-          </h2>
-
-          <div className="h-72">
-            <ResponsiveContainer height="100%" width="100%">
-              <BarChart data={datosVentas} margin={{ left: 8, right: 16 }}>
-                <CartesianGrid stroke={colores.rejilla} vertical={false} />
-                <XAxis
-                  axisLine={false}
-                  dataKey="nombre"
-                  tick={{ fill: colores.texto, fontSize: 10 }}
-                  tickLine={false}
-                  interval={0}
-                  angle={-25}
-                  textAnchor="end"
-                  height={56}
-                />
-                <YAxis
-                  axisLine={false}
-                  tick={{ fill: colores.texto, fontSize: 11 }}
-                  tickFormatter={(valor: number) => `$${Math.round(valor / 1000)}k`}
-                  tickLine={false}
-                  type="number"
-                  width={56}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: colores.fondo,
-                    border: '1px solid ' + colores.rejilla,
-                    borderRadius: '0.25rem',
-                    fontSize: 12,
-                  }}
-                  formatter={(valor) => [formatoPrecio(Number(valor)), 'Ventas']}
-                />
-                <Bar dataKey="total" isAnimationActive={false} radius={[2, 2, 0, 0]}>
-                  {datosVentas.map((_entrada, indice) => (
-                    <Cell
-                      fill={indice % 2 === 0 ? colores.barra : colores.barraAlt}
-                      key={`celda-${indice}`}
-                    />
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-surface-container-low border-b border-outline-variant">
+                    <th
+                      className={`py-2.5 px-space-md ${ETIQUETA_CLASS} w-12 text-center`}
+                      scope="col"
+                    >
+                      Pos.
+                    </th>
+                    <th className={`py-2.5 px-space-md ${ETIQUETA_CLASS}`} scope="col">
+                      Nombre comercial
+                    </th>
+                    <th className={`py-2.5 px-space-md ${ETIQUETA_CLASS} w-28`} scope="col">
+                      Tipo
+                    </th>
+                    <th
+                      className={`py-2.5 px-space-md ${ETIQUETA_CLASS} text-right`}
+                      scope="col"
+                    >
+                      Total Vendido
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/60 font-body-md text-body-md text-on-surface">
+                  {top.length === 0 && !cargando && (
+                    <tr>
+                      <td
+                        className="py-space-md font-body-md text-body-md text-on-surface-variant"
+                        colSpan={4}
+                      >
+                        Todavia no hay ventas registradas.
+                      </td>
+                    </tr>
+                  )}
+                  {top.map((vino, indice) => (
+                    <tr className="hover:bg-surface-container-low transition-colors" key={vino.cod_vino}>
+                      <td
+                        className={`py-2 px-space-md font-tabular-data text-tabular-data text-center font-semibold ${
+                          indice === 0 ? 'text-primary' : 'text-on-surface-variant'
+                        }`}
+                      >
+                        #{indice + 1}
+                      </td>
+                      <td className="py-2 px-space-md font-medium text-on-surface">
+                        {vino.nombre}
+                        <span className="block font-body-sm text-body-sm text-on-surface-variant">
+                          {formatoCodigoVino(vino.cod_vino)} - {vino.anada} - {vino.volumen_ml} ml
+                        </span>
+                      </td>
+                      <td className="py-2 px-space-md">
+                        <TipoVinoBadge tipo={vino.tipo} />
+                      </td>
+                      <td className="py-2 px-space-md font-tabular-data text-tabular-data text-right font-bold text-on-surface">
+                        {vino.botellas_vendidas.toLocaleString('es-AR')} botellas
+                      </td>
+                    </tr>
                   ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </section>
-      </div>
+        </article>
 
-      <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
-        <div className="flex flex-wrap items-center justify-between gap-space-md">
-          <h2 className="font-headline-md text-headline-md text-on-surface">
-            Vinos sin stock en sala con stock en el depósito
-          </h2>
+        <article className="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="p-space-md border-b border-outline-variant bg-surface-container-low">
+              <div className="flex items-center gap-space-sm">
+                <MaterialIcon name="storefront" className="text-primary text-[20px]" />
+                <h2 className="font-headline-md text-headline-md text-on-surface">
+                  Ventas por Sala (Último Trimestre)
+                </h2>
+              </div>
+              <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
+                Monto acumulado en moneda nacional (ARS).
+              </p>
+            </div>
 
-          <label className="flex flex-col gap-space-xs">
-            <span className="font-label-md text-label-md text-on-surface-variant">Sala</span>
-            <select
-              className="h-9 px-space-sm bg-surface-container-lowest border border-field-border rounded font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary"
-              onChange={(e) => setIdSala(Number(e.target.value))}
-              value={idSala}
-            >
-              {salas.map((sala) => (
-                <option key={sala.id_sala} value={sala.id_sala}>
-                  {sala.calle} {sala.numero} - {sala.localidad}
-                </option>
+            <div className="p-space-md flex flex-col gap-3 pt-4 max-h-[420px] overflow-y-auto">
+              {ventas.length === 0 && !cargando && (
+                <p className="font-body-md text-body-md text-on-surface-variant">
+                  Todavia no hay ventas en el último trimestre.
+                </p>
+              )}
+
+              {ventas.map((venta) => (
+                <div className="flex flex-col gap-1" key={venta.id_sala}>
+                  <div className="flex justify-between items-baseline font-body-sm text-body-sm">
+                    <span className="font-medium text-on-surface truncate">
+                      {venta.calle} {venta.numero} - {venta.localidad}
+                    </span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="font-label-sm text-label-sm text-on-surface-variant">
+                        {porcentaje(venta).toFixed(1)}%
+                      </span>
+                      <span className="font-tabular-data text-tabular-data font-bold text-on-surface">
+                        {formatoPrecio(venta.ventas_totales)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-full h-2 bg-surface-container-high rounded-sm overflow-hidden flex">
+                    <div
+                      className="h-full bg-primary-container transition-all duration-500 ease-out"
+                      style={{ width: `${porcentaje(venta)}%` }}
+                    />
+                  </div>
+                </div>
               ))}
-            </select>
-          </label>
-        </div>
+            </div>
+          </div>
 
-        {sinStock.length === 0 ? (
-          <div className="flex items-center justify-center gap-space-sm py-space-lg text-on-surface-variant">
-            <MaterialIcon name="check_circle" className="text-[20px]" />
-            <span className="font-body-md text-body-md">
-              No hay vinos sin stock en esta sala.
+          <div className="p-space-md bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
+            <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              Monto total liquidado trimestre:
+            </span>
+            <span className="font-headline-md text-headline-md font-bold text-on-surface font-tabular-data">
+              {formatoPrecio(totalTrimestre)} ARS
             </span>
           </div>
-        ) : (
+        </article>
+      </section>
+
+      {/* Vinos agotados en la sala */}
+      <section className="w-full">
+        <article className="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm">
+          <div className="p-space-md border-b border-outline-variant bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+            <div className="flex items-center gap-space-sm">
+              <MaterialIcon name="inventory_2" className="text-primary text-[22px]" />
+              <div>
+                <h2 className="font-headline-md text-headline-md text-on-surface">
+                  Vinos Agotados en Sala (Disponibles en Depósito Central)
+                </h2>
+                <p className="font-label-sm text-label-sm text-on-surface-variant">
+                  Detección de quiebre de stock por punto de despacho comercial.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-space-sm">
+              <label
+                className="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap"
+                htmlFor="filtro-sala"
+              >
+                Filtrar por Sala de Venta:
+              </label>
+              <select
+                className="bg-field border border-field-border rounded h-9 px-space-sm font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary"
+                id="filtro-sala"
+                onChange={(e) => setIdSala(Number(e.target.value))}
+                value={idSala}
+              >
+                {salas.map((sala) => (
+                  <option key={sala.id_sala} value={sala.id_sala}>
+                    {sala.calle} {sala.numero} - {sala.localidad}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-outline-variant">
-                  <th className="text-left py-space-sm font-label-md text-label-md text-on-surface-variant">
-                    Vino
+                <tr className="bg-surface-container-low border-b border-outline-variant">
+                  <th className={`py-2.5 px-space-md ${ETIQUETA_CLASS} w-40`} scope="col">
+                    Código de Vino
                   </th>
-                  <th className="text-right py-space-sm font-label-md text-label-md text-on-surface-variant">
-                    En sala
+                  <th className={`py-2.5 px-space-md ${ETIQUETA_CLASS}`} scope="col">
+                    Nombre del Vino
                   </th>
-                  <th className="text-right py-space-sm font-label-md text-label-md text-on-surface-variant">
-                    En depósito
+                  <th
+                    className={`py-2.5 px-space-md ${ETIQUETA_CLASS} w-48 text-center`}
+                    scope="col"
+                  >
+                    Stock en la Sala
+                  </th>
+                  <th
+                    className={`py-2.5 px-space-md ${ETIQUETA_CLASS} w-64 text-center`}
+                    scope="col"
+                  >
+                    Stock en Depósito Central
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-outline-variant/60 font-body-md text-body-md text-on-surface">
+                {sinStock.length === 0 && (
+                  <tr>
+                    <td
+                      className="py-space-md font-body-md text-body-md text-on-surface-variant"
+                      colSpan={4}
+                    >
+                      No hay vinos agotados en esta sala.
+                    </td>
+                  </tr>
+                )}
                 {sinStock.map((vino) => (
-                  <tr className="border-b border-outline-variant/60" key={vino.cod_vino}>
-                    <td className="py-space-sm font-body-md text-body-md text-on-surface">
+                  <tr className="hover:bg-surface-container-low transition-colors" key={vino.cod_vino}>
+                    <td className="py-3 px-space-md font-tabular-data text-tabular-data font-semibold text-on-surface-variant">
+                      {formatoCodigoVino(vino.cod_vino)}
+                    </td>
+                    <td className="py-3 px-space-md font-medium text-on-surface">
                       {vino.nombre}
+                      <span className="block font-body-sm text-body-sm text-on-surface-variant">
+                        {vino.anada} - {vino.volumen_ml} ml
+                      </span>
                     </td>
-                    <td className="py-space-sm text-right font-tabular-data text-tabular-data text-on-surface">
-                      {vino.stock_sala}
+                    <td className="py-3 px-space-md text-center">
+                      <span className="inline-flex items-center justify-center font-label-sm text-label-sm font-medium px-2.5 py-1 rounded bg-error/15 text-error border border-error/40">
+                        {vino.stock_sala} botellas
+                      </span>
                     </td>
-                    <td className="py-space-sm text-right font-tabular-data text-tabular-data text-primary font-semibold">
-                      {vino.stock_deposito}
+                    <td className="py-3 px-space-md text-center">
+                      <span className="inline-flex items-center justify-center font-label-sm text-label-sm font-medium px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 font-tabular-data">
+                        {vino.stock_deposito} botellas disponibles
+                      </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </section>
 
-      {cargando && (
-        <p className="font-body-md text-body-md text-on-surface-variant">Cargando indicadores...</p>
-      )}
+          <div className="p-space-md bg-surface-container-low border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-space-md">
+            <div className="flex items-center gap-space-xs text-on-surface-variant">
+              <MaterialIcon name="info" className="text-[18px] text-outline" />
+              <span className="font-body-sm text-body-sm italic">
+                Vinos listos para solicitar reposición mediante transferencia.
+              </span>
+            </div>
+            <Link
+              className="inline-flex items-center gap-space-xs border border-primary text-primary hover:bg-primary/10 font-label-md text-label-md px-space-md py-1.5 rounded transition-colors"
+              to="/transferencias"
+            >
+              <MaterialIcon name="move_up" className="text-[16px]" />
+              <span>Iniciar Transferencia de Stock</span>
+            </Link>
+          </div>
+        </article>
+      </section>
     </div>
   )
 }

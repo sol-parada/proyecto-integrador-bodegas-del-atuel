@@ -192,6 +192,9 @@ export interface TransferenciaInput {
 export interface TopVino {
   cod_vino: number
   nombre: string
+  tipo: TipoVino
+  anada: number
+  volumen_ml: number
   botellas_vendidas: number
 }
 
@@ -207,6 +210,9 @@ export interface VentaPorSala {
 export interface VinoSinStock {
   cod_vino: number
   nombre: string
+  tipo: TipoVino
+  anada: number
+  volumen_ml: number
   stock_sala: number
   stock_deposito: number
 }
