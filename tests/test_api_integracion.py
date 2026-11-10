@@ -374,11 +374,24 @@ def test_cambio_de_estado_invalido_devuelve_409(cliente, bd):
     RN-10/RN-11: las transiciones van en_confeccion -> terminado -> procesado
     y no retroceden. Terminar dos veces la misma transferencia se rechaza.
     """
+    # Se usa un vino con stock en el deposito: el trigger RN-11 valida la
+    # disponibilidad al crear la transferencia.
+    with bd.cursor() as cur:
+        cur.execute(
+            "SELECT cod_vino FROM stock_deposito WHERE cantidad > 0 ORDER BY cod_vino LIMIT 1"
+        )
+        fila = cur.fetchone()
+
+        if fila is None:
+            pytest.skip("La base no tiene stock de depósito cargado")
+
+        cod_vino = fila[0]
+
     respuesta = cliente.post(
         "/transferencias",
         json={
             "id_sala": 1,
-            "renglones": [{"cod_vino": 1, "cantidad": 1}],
+            "renglones": [{"cod_vino": cod_vino, "cantidad": 1}],
         },
     )
 
