@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.repositories.reportes import (
     top_vinos, trazabilidad_vino, transportista_activo, ventas_por_sala, vinos_sin_stock,
@@ -18,8 +18,10 @@ def get_ventas_por_sala() -> list[dict]:
 
 
 @router.get("/vinos-sin-stock")
-def get_vinos_sin_stock() -> list[dict]:
-    return vinos_sin_stock()
+def get_vinos_sin_stock(
+    id_sala: int = Query(default=1, ge=1, description="Sala de venta analizada"),
+) -> list[dict]:
+    return vinos_sin_stock(id_sala)
 
 
 @router.get("/transportista-activo")

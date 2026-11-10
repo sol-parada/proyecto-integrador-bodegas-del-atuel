@@ -48,7 +48,9 @@ class VinoCreate(BaseModel):
     anada: int = Field(ge=1900, le=2100)
     volumen_ml: int = Field(gt=0)
     graduacion: Decimal = Field(ge=5, le=20)
-    precio: Decimal = Field(ge=0)
+    # El precio lo valida la base (chk_vino_precio_positivo, RN-01/RN-15).
+    # La API no duplica esa regla: la deja en un solo lugar.
+    precio: Decimal
     cuit_bodega: str
     composicion: list[tuple[int, Decimal]] = Field(default_factory=list)
     maridajes: list[int] = Field(default_factory=list)

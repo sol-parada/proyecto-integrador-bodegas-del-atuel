@@ -27,11 +27,30 @@ def ventas_por_sala() -> list[dict[str, Any]]:
         GROUP BY id_sala ORDER BY ventas_totales DESC, id_sala""")
 
 
-def vinos_sin_stock() -> list[dict[str, Any]]:
-    return _query("""SELECT v.cod_vino, v.nombre FROM vino v
-        LEFT JOIN stock_sala ss ON ss.cod_vino = v.cod_vino
-        GROUP BY v.cod_vino, v.nombre
-        HAVING COALESCE(SUM(ss.cantidad), 0) = 0 ORDER BY v.cod_vino""")
+def vinos_sin_stock(id_sala: int) -> list[dict[str, Any]]:
+    """
+    S6: para una sala determinada, los vinos sin stock en la sala
+    pero con stock disponible en el deposito central.
+    """
+
+    return _query(
+        """
+        SELECT v.cod_vino,
+               v.nombre,
+               COALESCE(ss.cantidad, 0) AS stock_sala,
+               sd.cantidad AS stock_deposito
+        FROM vino AS v
+        JOIN stock_deposito AS sd
+            ON sd.cod_vino = v.cod_vino
+        LEFT JOIN stock_sala AS ss
+            ON ss.cod_vino = v.cod_vino
+           AND ss.id_sala = %s
+        WHERE COALESCE(ss.cantidad, 0) = 0
+          AND sd.cantidad > 0
+        ORDER BY v.cod_vino
+        """,
+        (id_sala,),
+    )
 
 
 def transportista_activo() -> list[dict[str, Any]]:
