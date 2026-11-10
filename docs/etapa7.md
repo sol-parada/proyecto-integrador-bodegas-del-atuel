@@ -59,14 +59,30 @@ de la regla. No queda ningún dato a medias.
 
 ### Transferencias
 
-Lista los documentos con su estado y habilita las acciones según
-corresponda, respetando las transiciones de RN-10 y RN-11:
+Movimiento interno de producto terminado entre el Depósito Central y las
+salas de venta (RN-11).
 
-| Estado | Cargar renglones | Terminar | Procesar |
-|---|---|---|---|
-| `en_confeccion` | Sí | Sí | No |
-| `terminado` | No | No | Sí |
-| `procesado` | No | No | No |
+La pantalla tiene dos bloques:
+
+1. **Nueva Solicitud de Transferencia**: elige la sala solicitante, muestra
+   la fecha de confección y el depósito de origen (ambos de solo lectura, los
+   fija la base), y carga las líneas con el stock disponible en el depósito.
+   El formulario se puede plegar.
+2. **Registro Histórico**: listado de todas las transferencias con filtros
+   por estado y contadores.
+
+Las acciones dependen del estado, respetando las transiciones de RN-10 y
+RN-11:
+
+| Estado | Acciones disponibles |
+|---|---|
+| `en_confeccion` | Agregar renglón, Marcar como Terminado |
+| `terminado` | Procesar en Depósito |
+| `procesado` | Ninguna (Stock impactado) |
+
+Agregar renglones a una transferencia en confección se hace desde un modal,
+porque el stock se descuenta del depósito recién cuando la transferencia se
+procesa, no al cargarla.
 
 ### Tablero
 
@@ -141,12 +157,13 @@ se trata.
 | Catálogo | `GET /vinos`, `GET /vinos/{cod}` |
 | Alta de vino | `POST /vinos`, `PUT /vinos/{cod}` |
 | Nueva venta | `GET /salas`, `GET /salas/{id}/stock`, `GET /clientes`, `POST /comprobantes`, `GET /comprobantes/{nro}` |
-| Transferencias | `GET /transferencias`, `GET /transferencias/{nro}`, `POST /transferencias`, `POST /transferencias/{nro}/renglones`, `POST /transferencias/{nro}/terminar`, `POST /transferencias/{nro}/procesar` |
+| Transferencias | `GET /transferencias`, `GET /transferencias/{nro}`, `POST /transferencias`, `POST /transferencias/{nro}/renglones`, `POST /transferencias/{nro}/terminar`, `POST /transferencias/{nro}/procesar`, `GET /deposito/stock` |
 | Tablero | `GET /reportes/top-vinos`, `GET /reportes/ventas-por-sala`, `GET /reportes/vinos-sin-stock?id_sala=N` |
 | Todas | `GET /salud` (estado de la API en el sidebar) |
 
-Los endpoints de salas y de listado de transferencias se agregaron en esta
-etapa, porque las pantallas los necesitaban y no existían en la etapa 6.
+Los endpoints de salas, de listado de transferencias y de stock del depósito
+se agregaron en esta etapa, porque las pantallas los necesitaban y no
+existían en la etapa 6.
 
 ---
 
