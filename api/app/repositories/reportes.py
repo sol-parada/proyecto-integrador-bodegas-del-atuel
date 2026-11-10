@@ -22,9 +22,28 @@ def top_vinos() -> list[dict[str, Any]]:
 
 
 def ventas_por_sala() -> list[dict[str, Any]]:
-    return _query("""SELECT id_sala, SUM(total) AS ventas_totales FROM comprobante
-        WHERE fecha >= CURRENT_DATE - INTERVAL '3 months'
-        GROUP BY id_sala ORDER BY ventas_totales DESC, id_sala""")
+    """
+    S8: monto total de ventas por sala durante el ultimo trimestre.
+    """
+
+    return _query(
+        """
+        SELECT c.id_sala,
+               s.calle,
+               s.numero,
+               l.nombre AS localidad,
+               COUNT(*) AS cantidad_comprobantes,
+               SUM(c.total) AS ventas_totales
+        FROM comprobante AS c
+        JOIN sala_venta AS s
+            ON s.id_sala = c.id_sala
+        JOIN localidad AS l
+            ON l.codigo_postal = s.codigo_postal
+        WHERE c.fecha >= CURRENT_DATE - INTERVAL '3 months'
+        GROUP BY c.id_sala, s.calle, s.numero, l.nombre
+        ORDER BY ventas_totales DESC, c.id_sala
+        """
+    )
 
 
 def vinos_sin_stock(id_sala: int) -> list[dict[str, Any]]:
