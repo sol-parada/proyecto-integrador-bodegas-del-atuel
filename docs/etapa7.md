@@ -208,6 +208,50 @@ Las tres páginas nuevas reutilizan las mismas clases y los mismos
 componentes que el catálogo y el formulario de vinos, de modo que la
 aplicación se ve uniforme.
 
+### Modo oscuro
+
+La aplicación se muestra en **modo oscuro**. Los tokens semánticos de
+Tailwind no llevan un color fijo: leen una variable CSS definida en
+`front/src/index.css`.
+
+```js
+// tailwind.config.js
+const token = (nombre) => `rgb(var(--md-${nombre}) / <alpha-value>)`
+
+colors: {
+  primary: token('primary'),
+  surface: token('surface'),
+  // ...
+}
+```
+
+```css
+/* index.css */
+:root {
+  --md-primary: 91 0 6;
+  --md-surface: 247 249 251;
+  /* ... paleta clara */
+}
+
+.dark {
+  --md-primary: 255 180 171;
+  --md-surface: 20 18 24;
+  /* ... paleta oscura */
+}
+```
+
+La paleta oscura sale de la misma paleta clara, con los tonos invertidos
+para mantener el contraste. La clase `dark` del `<html>` decide cuál se
+aplica, de modo que **el tema claro sigue disponible**: para volver a él,
+alcanza con quitar esa clase.
+
+Cada variable guarda los canales R, G y B por separado para poder
+usarlos con opacidad (`rgb(var(--md-outline-variant) / 0.6)`).
+
+Los gráficos de Recharts dibujan en SVG y no aceptan clases de Tailwind:
+`TableroPage` lee los colores de las variables del tema y los relee
+cuando el tema cambia.
+
 ---
 
 ## 8. Criterios de aceptación de la etapa 7
