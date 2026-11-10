@@ -1,8 +1,3 @@
--- =============================================================================
--- BODEGAS DEL ATUEL - TRABAJO PRÃCTICO INTEGRADOR (BASES DE DATOS)
--- Script 001_esquema.sql - Etapa 1: CreaciÃ³n de Esquema FÃ­sico Inicial
--- =============================================================================
-
 -- -----------------------------------------------------------------------------
 -- 1. TIPOS ENUMERADOS Y DOMINIOS
 -- -----------------------------------------------------------------------------
@@ -11,7 +6,7 @@ CREATE TYPE tipo_vino AS ENUM ('tinto', 'blanco', 'rosado', 'espumante');
 CREATE TYPE tipo_cliente_enum AS ENUM ('socio', 'distribuidor', 'exportador');
 CREATE TYPE estado_documento AS ENUM ('en_confeccion', 'terminado', 'procesado');
 
--- Dominio para CUIT (11 dÃ­gitos numÃ©ricos)
+-- Dominio para CUIT (11 digitos numericos)
 CREATE DOMAIN cuit_dom AS CHAR(11) CHECK (VALUE ~ '^[0-9]{11}$');
 
 -- -----------------------------------------------------------------------------
@@ -41,7 +36,7 @@ CREATE TABLE empleado (
 );
 
 -- -----------------------------------------------------------------------------
--- 3. PRODUCCIÃ“N DE UVA Y CALIDAD
+-- 3. PRODUCCION DE UVA Y CALIDAD
 -- -----------------------------------------------------------------------------
 CREATE TABLE bodega (
     cuit cuit_dom PRIMARY KEY,
@@ -94,7 +89,7 @@ CREATE TABLE analisis_calidad (
 );
 
 -- -----------------------------------------------------------------------------
--- 4. VINOS, COMPOSICIÃ“N Y MARIDAJES
+-- 4. VINOS, COMPOSICION Y MARIDAJES
 -- -----------------------------------------------------------------------------
 CREATE TABLE vino (
     cod_vino INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -127,7 +122,7 @@ CREATE TABLE vino_maridaje (
 );
 
 -- -----------------------------------------------------------------------------
--- 5. CLIENTES Y PERMISOS DE EXPORTACIÃ“N (Class Table Inheritance)
+-- 5. CLIENTES Y PERMISOS DE EXPORTACION (Class Table Inheritance)
 -- -----------------------------------------------------------------------------
 CREATE TABLE cliente (
     id_cliente INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -181,7 +176,7 @@ CREATE TABLE transportista_cobertura (
 );
 
 -- -----------------------------------------------------------------------------
--- 7. DEPÃ“SITO CENTRAL, INGRESOS Y TRANSFERENCIAS
+-- 7. DEPOSITO CENTRAL, INGRESOS Y TRANSFERENCIAS
 -- -----------------------------------------------------------------------------
 CREATE TABLE stock_deposito (
     cod_vino INT PRIMARY KEY REFERENCES vino(cod_vino) ON DELETE RESTRICT,
@@ -248,7 +243,7 @@ CREATE TABLE renglon_comprobante (
 );
 
 -- -----------------------------------------------------------------------------
--- 9. AUDITORÃA DE PRECIOS
+-- 9. AUDITORIA DE PRECIOS
 -- -----------------------------------------------------------------------------
 CREATE TABLE auditoria_precio (
     id_auditoria INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

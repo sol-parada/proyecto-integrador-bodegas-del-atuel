@@ -1,8 +1,3 @@
--- ======================================================================
--- ARCHIVO: 002_constraints.sql
--- ETAPA 2: Restricciones de Dominio, Integridad y Valores DEFAULT
--- ======================================================================
-
 -- 1. VALORES POR DEFECTO (DEFAULT)
 
 -- Presentación estándar del vino: 750 ml.

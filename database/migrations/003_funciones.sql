@@ -1,6 +1,3 @@
--- RN-06/U6: fuente única = cliente.descuento vigente. Requiere 002 de Valentina.
--- Santiago · H2. Tasas en [0,1]; importes monetarios con dos decimales.
--- STABLE: consulta tablas y usa la instantánea de la sentencia.
 CREATE OR REPLACE FUNCTION public.fn_descuento_cliente(p_id_cliente INTEGER)
 RETURNS NUMERIC LANGUAGE plpgsql STABLE AS $$
 DECLARE v_tasa NUMERIC;

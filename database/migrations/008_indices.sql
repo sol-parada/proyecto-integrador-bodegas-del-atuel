@@ -1,4 +1,3 @@
--- Santiago · H4. Candidatos: validar contra la carga H3, no prometer uso del planner.
 -- 1. Compuesto: igualdad de sala antes del rango de fecha (S8 por sala).
 CREATE INDEX idx_comprobante_sala_fecha ON comprobante (id_sala, fecha);
 -- 2. Parcial: solamente pendientes para S5; predicado idéntico al de la consulta.

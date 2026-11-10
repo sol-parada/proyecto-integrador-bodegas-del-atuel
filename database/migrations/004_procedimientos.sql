@@ -1,10 +1,3 @@
--- Propiedad y GRANT se configuran en 007_roles.sql por Valentina.
--- El propietario debe ser NOLOGIN, no superusuario; la API no debe ser miembro.
--- Tablas calificadas explícitamente; search_path excluye esquemas de aplicación.
--- Santiago · RN-10/RN-11. CALL participa en la transacción del invocador.
--- Sin COMMIT interno ni excepciones silenciadas: cualquier error revierte el CALL.
--- Protección transitoria ante RN-12 aún ausente: SHARE bloquea escrituras de
--- renglones durante el procesamiento. Es global por tabla (ver docs/contratos_datos.md).
 CREATE OR REPLACE PROCEDURE public.sp_procesar_ingreso(p_codigo INTEGER)
 LANGUAGE plpgsql
 SECURITY DEFINER
