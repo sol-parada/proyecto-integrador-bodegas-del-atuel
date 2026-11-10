@@ -1,15 +1,16 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi import Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from psycopg2 import Error as PsycopgError
 
+from app.dependencies import get_db_connection
 from app.pool import close_pool, initialize_pool
 from app.routes.health import router as health_router
 from app.routes.vinos import router as vinos_router
 from app.routes.clientes import router as clientes_router
 from app.routes.reportes import router as reportes_router
+from etapa6_valen.api_rutas import crear_router
 
 
 @asynccontextmanager
@@ -45,7 +46,28 @@ async def postgres_error_handler(request: Request, error: PsycopgError) -> JSONR
         content={"detail": error.diag.message_primary or str(error), "sqlstate": code},
     )
 
+
+@app.exception_handler(HTTPException)
+async def http_error_handler(request: Request, error: HTTPException) -> JSONResponse:
+    detail = error.detail
+
+    if isinstance(detail, dict) and "mensaje" in detail:
+        content = {
+            "detail": detail["mensaje"],
+            "sqlstate": detail.get("codigo"),
+        }
+    else:
+        content = {"detail": detail}
+
+    return JSONResponse(
+        status_code=error.status_code,
+        content=content,
+        headers=error.headers,
+    )
+
+
 app.include_router(health_router)
 app.include_router(vinos_router)
 app.include_router(clientes_router)
 app.include_router(reportes_router)
+app.include_router(crear_router(get_db_connection))
