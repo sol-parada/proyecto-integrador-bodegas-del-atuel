@@ -16,9 +16,26 @@ def _query(sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
 
 
 def top_vinos() -> list[dict[str, Any]]:
-    return _query("""SELECT v.cod_vino, v.nombre, SUM(r.cantidad) AS botellas_vendidas
-        FROM vino v JOIN renglon_comprobante r USING (cod_vino)
-        GROUP BY v.cod_vino, v.nombre ORDER BY botellas_vendidas DESC, v.cod_vino LIMIT 10""")
+    """
+    S1: ranking de los 10 vinos con mayor cantidad de botellas vendidas
+    en toda la red de salas.
+    """
+
+    return _query(
+        """
+        SELECT v.cod_vino,
+               v.nombre,
+               v.tipo::text AS tipo,
+               v.anada,
+               v.volumen_ml,
+               SUM(r.cantidad) AS botellas_vendidas
+        FROM vino AS v
+        JOIN renglon_comprobante AS r USING (cod_vino)
+        GROUP BY v.cod_vino, v.nombre, v.tipo, v.anada, v.volumen_ml
+        ORDER BY botellas_vendidas DESC, v.cod_vino
+        LIMIT 10
+        """
+    )
 
 
 def ventas_por_sala() -> list[dict[str, Any]]:
@@ -56,6 +73,9 @@ def vinos_sin_stock(id_sala: int) -> list[dict[str, Any]]:
         """
         SELECT v.cod_vino,
                v.nombre,
+               v.tipo::text AS tipo,
+               v.anada,
+               v.volumen_ml,
                COALESCE(ss.cantidad, 0) AS stock_sala,
                sd.cantidad AS stock_deposito
         FROM vino AS v
