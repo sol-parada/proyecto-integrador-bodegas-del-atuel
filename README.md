@@ -33,7 +33,8 @@ Las reglas importantes del negocio están protegidas principalmente desde la bas
 - Docker y Docker Compose
 - SQL
 - Git y GitHub
-- Python, API REST y frontend en etapas posteriores
+- Python y uv para la gestión reproducible de dependencias
+- FastAPI para la API REST
 
 ## Estado actual
 
@@ -122,6 +123,19 @@ Proyecto Bodegas del Atuel/
 └── tests/
 
 ## Configuración local
+
+Las dependencias Python del proyecto se declaran en `pyproject.toml` y se fijan
+en `uv.lock`. Para instalar el entorno reproducible:
+
+```powershell
+uv sync
+```
+
+Los scripts Python se ejecutan con `uv run`, por ejemplo:
+
+```powershell
+uv run python .\database\seed\etapa3.py
+```
 
 Crear un archivo `.env` en la raíz del repositorio, junto a `compose.yaml`.
 

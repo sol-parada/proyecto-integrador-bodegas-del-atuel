@@ -25,12 +25,18 @@ La carga se realiza respetando las dependencias entre tablas.
 - Python 3.
 - PostgreSQL 16.
 - Docker Desktop, si se utiliza el entorno con contenedores.
-- Dependencias declaradas en requirements.txt.
+- Dependencias declaradas en `pyproject.toml` y bloqueadas en `uv.lock`.
 
-Desde la raíz del proyecto:
+Desde la raíz del proyecto, instalar las dependencias con:
 
 ```powershell
-python -m pip install -r requirements.txt
+uv sync
+```
+
+Para ejecutar el generador sin activar manualmente un entorno virtual:
+
+```powershell
+uv run python .\database\seed\etapa3.py
 ```
 
 ## 3. Configuración de la conexión
