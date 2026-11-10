@@ -12,6 +12,7 @@ from app.routes.vinos import router as vinos_router
 from app.routes.clientes import router as clientes_router
 from app.routes.reportes import router as reportes_router
 from app.routes.salas import router as salas_router
+from app.routes.deposito import router as deposito_router
 from app.routes.transferencias import router as transferencias_router
 from app.operaciones.api_rutas import crear_router
 
@@ -85,6 +86,7 @@ app.include_router(health_router)
 app.include_router(vinos_router)
 app.include_router(clientes_router)
 app.include_router(salas_router)
+app.include_router(deposito_router)
 app.include_router(reportes_router)
 app.include_router(transferencias_router)
 app.include_router(crear_router(get_db_connection))
