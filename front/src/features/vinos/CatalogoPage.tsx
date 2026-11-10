@@ -36,7 +36,7 @@ const FILTROS_INICIALES: FiltrosState = {
 }
 
 const SELECT_CLASS =
-  'w-full h-[36px] px-space-sm bg-[#ffffff] border border-[#cbd5e1] rounded font-body-md text-body-md text-on-surface focus:outline-none focus:border-[#800e13] focus:ring-1 focus:ring-[#800e13]'
+  'w-full h-[36px] px-space-sm bg-surface-container-lowest border border-field-border rounded font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary'
 
 export function CatalogoPage() {
   const location = useLocation()
@@ -164,7 +164,7 @@ export function CatalogoPage() {
             {cargando ? '...' : totalReferencias} Referencias Activas
           </span>
           <Link
-            className="inline-flex items-center gap-1.5 px-[10px] py-[5px] bg-[#800e13] hover:bg-[#ad2831] text-white font-label-md text-label-md rounded transition-colors"
+            className="inline-flex items-center gap-1.5 px-[10px] py-[5px] bg-primary-container hover:bg-primary text-white font-label-md text-label-md rounded transition-colors"
             to="/vinos/nuevo"
           >
             <MaterialIcon name="add" className="text-[16px]" />
@@ -175,7 +175,7 @@ export function CatalogoPage() {
 
       <section
         aria-label="Filtros del catálogo"
-        className="w-full bg-[#ffffff] border border-[#e2e8f0] rounded px-space-md py-space-sm shadow-sm"
+        className="w-full bg-surface-container-lowest border border-outline-variant rounded px-space-md py-space-sm shadow-sm"
       >
         <form
           className="flex flex-wrap items-center gap-space-md text-on-surface"
@@ -286,12 +286,12 @@ export function CatalogoPage() {
 
       <section
         aria-label="Listado maestro de vinos"
-        className="w-full bg-[#ffffff] border border-[#e2e8f0] rounded overflow-hidden shadow-sm"
+        className="w-full bg-surface-container-lowest border border-outline-variant rounded overflow-hidden shadow-sm"
       >
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-surface-container-low border-b border-outline-variant">
                 <th className="py-[10px] px-[14px] font-label-sm text-label-sm text-on-surface-variant uppercase" scope="col">
                   Código
                 </th>
@@ -318,7 +318,7 @@ export function CatalogoPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#f1f5f9]">
+            <tbody className="divide-y divide-outline-variant/60">
               {cargando && (
                 <tr>
                   <td className="py-[10px] px-[14px] font-body-md text-body-md text-on-surface-variant" colSpan={8}>
@@ -337,7 +337,7 @@ export function CatalogoPage() {
 
               {!cargando &&
                 listado?.items.map((vino) => (
-                  <tr className="hover:bg-[#f8fafc] transition-colors h-[44px]" key={vino.cod_vino}>
+                  <tr className="hover:bg-surface-container-low transition-colors h-[44px]" key={vino.cod_vino}>
                     <td className="py-[10px] px-[14px] font-tabular-data text-tabular-data font-semibold text-on-surface">
                       {formatoCodigoVino(vino.cod_vino)}
                     </td>
@@ -361,7 +361,7 @@ export function CatalogoPage() {
                     </td>
                     <td className="py-[10px] px-[14px] text-center">
                       <button
-                        className="px-[10px] py-[5px] bg-[#800e13] hover:bg-[#ad2831] text-[#ffffff] font-label-md text-[11px] rounded transition-colors cursor-pointer"
+                        className="px-[10px] py-[5px] bg-primary-container hover:bg-primary text-on-primary-container font-label-md text-[11px] rounded transition-colors cursor-pointer"
                         onClick={() => setCodSeleccionado(vino.cod_vino)}
                         type="button"
                       >

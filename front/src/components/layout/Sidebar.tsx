@@ -27,7 +27,7 @@ export function Sidebar() {
   const estado = ESTADO_SALUD[health]
 
   return (
-    <aside className="fixed left-0 top-14 bottom-0 w-64 bg-surface-container-low border-r border-[#e2e8f0] z-40 hidden lg:flex flex-col justify-between py-space-md">
+    <aside className="fixed left-0 top-14 bottom-0 w-64 bg-surface-container-low border-r border-outline-variant z-40 hidden lg:flex flex-col justify-between py-space-md">
       <div className="flex flex-col gap-space-xs px-space-sm">
         <div className="px-space-md py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
           Operaciones Rápidas
@@ -62,7 +62,7 @@ export function Sidebar() {
           )}
         </nav>
       </div>
-      <div className="px-space-md pt-space-sm border-t border-[#e2e8f0]">
+      <div className="px-space-md pt-space-sm border-t border-outline-variant">
         <div className="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
           <span>ESTADO API</span>
           <span className={`inline-block w-2 h-2 rounded-full ${estado.color}`} />

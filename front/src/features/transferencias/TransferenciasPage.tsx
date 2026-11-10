@@ -16,7 +16,7 @@ import { MaterialIcon } from '../../components/ui/MaterialIcon'
 import { SuccessBanner } from '../../components/ui/SuccessBanner'
 
 const INPUT_CLASS =
-  'w-full h-9 px-space-sm bg-white border border-slate-300 rounded font-body-md text-body-md text-slate-900 focus:outline-none focus:border-[#800e13] focus:ring-1 focus:ring-[#800e13] transition-colors'
+  'w-full h-9 px-space-sm bg-surface-container-lowest border border-field-border rounded font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors'
 
 const ETIQUETA_ESTADO: Record<EstadoDocumento, { texto: string; clase: string }> = {
   en_confeccion: {
@@ -222,7 +222,7 @@ export function TransferenciasPage() {
       {exito && <SuccessBanner message={exito} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-space-lg items-start">
-        <section className="lg:col-span-2 flex flex-col gap-space-md bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+        <section className="lg:col-span-2 flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
           <h2 className="font-headline-md text-headline-md text-on-surface">Documentos</h2>
 
           <div className="flex flex-wrap items-end gap-space-sm">
@@ -256,7 +256,7 @@ export function TransferenciasPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-[#e2e8f0]">
+                <tr className="border-b border-outline-variant">
                   <th className="text-left py-space-sm font-label-md text-label-md text-on-surface-variant">
                     N.
                   </th>
@@ -284,7 +284,7 @@ export function TransferenciasPage() {
                 )}
                 {transferencias.map((transferencia) => (
                   <tr
-                    className={`border-b border-[#eef1f4] cursor-pointer hover:bg-surface-container ${
+                    className={`border-b border-outline-variant/60 cursor-pointer hover:bg-surface-container ${
                       detalle?.numero_solicitud === transferencia.numero_solicitud
                         ? 'bg-surface-container-high'
                         : ''
@@ -323,7 +323,7 @@ export function TransferenciasPage() {
           </div>
         </section>
 
-        <section className="lg:col-span-3 flex flex-col gap-space-md bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+        <section className="lg:col-span-3 flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
           {detalle ? (
             <>
               <div className="flex items-center justify-between gap-space-md">
@@ -344,9 +344,9 @@ export function TransferenciasPage() {
                 el {detalle.fecha_confeccion}
               </p>
 
-              <div className="flex flex-wrap gap-space-sm pt-space-sm border-t border-[#e2e8f0]">
+              <div className="flex flex-wrap gap-space-sm pt-space-sm border-t border-outline-variant">
                 <button
-                  className="h-9 px-space-md rounded border border-[#800e13] text-[#800e13] font-label-md text-label-md hover:bg-[#800e13] hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#800e13]"
+                  className="h-9 px-space-md rounded border border-primary text-primary font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container dark:hover:text-on-primary transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-primary"
                   disabled={!puedeTerminar || ocupado}
                   onClick={() => cambiarEstado('terminar')}
                   type="button"
@@ -366,7 +366,7 @@ export function TransferenciasPage() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b border-[#e2e8f0]">
+                    <tr className="border-b border-outline-variant">
                       <th className="text-left py-space-sm font-label-md text-label-md text-on-surface-variant">
                         Vino
                       </th>
@@ -387,7 +387,7 @@ export function TransferenciasPage() {
                       </tr>
                     )}
                     {(detalle.renglones ?? []).map((renglon) => (
-                      <tr className="border-b border-[#eef1f4]" key={renglon.cod_vino}>
+                      <tr className="border-b border-outline-variant/60" key={renglon.cod_vino}>
                         <td className="py-space-sm font-body-md text-body-md text-on-surface">
                           {renglon.nombre}
                         </td>
@@ -401,7 +401,7 @@ export function TransferenciasPage() {
               </div>
 
               <form
-                className="flex flex-wrap items-end gap-space-sm pt-space-sm border-t border-[#e2e8f0]"
+                className="flex flex-wrap items-end gap-space-sm pt-space-sm border-t border-outline-variant"
                 onSubmit={agregarRenglon}
               >
                 <label className="flex-1 min-w-[200px] flex flex-col gap-space-xs">

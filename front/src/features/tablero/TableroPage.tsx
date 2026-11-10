@@ -17,6 +17,33 @@ import {
   YAxis,
 } from 'recharts'
 
+/**
+ * Recharts dibuja en SVG y no acepta clases de Tailwind, asi que los
+ * colores del grafico se leen de las variables del tema. Al cambiar el
+ * tema, las variables cambian y el grafico se entera.
+ */
+function leerColor(nombre: string, respaldo: string): string {
+  if (typeof window === 'undefined') {
+    return respaldo
+  }
+
+  const valor = getComputedStyle(document.documentElement)
+    .getPropertyValue(nombre)
+    .trim()
+
+  if (!valor) {
+    return respaldo
+  }
+
+  const canales = valor.split(/\s+/).map(Number)
+
+  if (canales.length < 3 || canales.some(Number.isNaN)) {
+    return respaldo
+  }
+
+  return `rgb(${canales[0]} ${canales[1]} ${canales[2]})`
+}
+
 const COLOR_BARRA = '#800e13'
 const COLOR_BARRA_ALT = '#a8303a'
 
@@ -32,6 +59,39 @@ export function TableroPage() {
   const [sinStock, setSinStock] = useState<VinoSinStock[]>([])
   const [error, setError] = useState<ApiError | null>(null)
   const [cargando, setCargando] = useState(true)
+  // Los colores del grafico se releen cuando cambia el tema.
+  const [colores, setColores] = useState({
+    barra: COLOR_BARRA,
+    barraAlt: COLOR_BARRA_ALT,
+    rejilla: '#e2e8f0',
+    texto: '#58413f',
+    fondo: '#fff',
+  })
+
+  useEffect(() => {
+    const leer = () => {
+      setColores({
+        barra: leerColor('--md-primary-container', COLOR_BARRA),
+        barraAlt: leerColor('--md-primary', COLOR_BARRA_ALT),
+        rejilla: leerColor('--md-outline-variant', '#e2e8f0'),
+        texto: leerColor('--md-on-surface-variant', '#58413f'),
+        fondo: leerColor('--md-surface-container-lowest', '#fff'),
+      })
+    }
+
+    leer()
+
+    const observer = new MutationObserver(leer)
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -130,7 +190,7 @@ export function TableroPage() {
       {error && <ErrorBanner detail={error.detail} sqlstate={error.sqlstate} />}
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-space-lg">
-        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Ventas del último trimestre
           </span>
@@ -142,7 +202,7 @@ export function TableroPage() {
           </span>
         </div>
 
-        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Vinos más vendidos
           </span>
@@ -152,7 +212,7 @@ export function TableroPage() {
           </span>
         </div>
 
-        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+        <div className="flex flex-col gap-space-xs bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
           <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
             Vinos sin stock
           </span>
@@ -166,7 +226,7 @@ export function TableroPage() {
       </section>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-space-lg items-start">
-        <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+        <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
           <h2 className="font-headline-md text-headline-md text-on-surface">
             Top 10 vinos por botellas vendidas
           </h2>
@@ -174,36 +234,41 @@ export function TableroPage() {
           <div className="h-72">
             <ResponsiveContainer height="100%" width="100%">
               <BarChart data={datosTop} layout="vertical" margin={{ left: 8, right: 16 }}>
-                <CartesianGrid stroke="#e2e8f0" horizontal={false} />
+                <CartesianGrid stroke={colores.rejilla} horizontal={false} />
                 <XAxis
                   axisLine={false}
-                  tick={{ fill: '#58413f', fontSize: 11 }}
+                  tick={{ fill: colores.texto, fontSize: 11 }}
                   tickLine={false}
                   type="number"
                 />
                 <YAxis
                   axisLine={false}
                   dataKey="nombre"
-                  tick={{ fill: '#58413f', fontSize: 11 }}
+                  tick={{ fill: colores.texto, fontSize: 11 }}
                   tickLine={false}
                   type="category"
                   width={140}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
+                    background: colores.fondo,
+                    border: '1px solid ' + colores.rejilla,
                     borderRadius: '0.25rem',
                     fontSize: 12,
                   }}
                 />
-                <Bar dataKey="botellas" fill={COLOR_BARRA} radius={[0, 2, 2, 0]} />
+                <Bar
+                  dataKey="botellas"
+                  fill={colores.barra}
+                  isAnimationActive={false}
+                  radius={[0, 2, 2, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </section>
 
-        <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+        <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
           <h2 className="font-headline-md text-headline-md text-on-surface">
             Ventas por sala en el último trimestre
           </h2>
@@ -211,11 +276,11 @@ export function TableroPage() {
           <div className="h-72">
             <ResponsiveContainer height="100%" width="100%">
               <BarChart data={datosVentas} margin={{ left: 8, right: 16 }}>
-                <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                <CartesianGrid stroke={colores.rejilla} vertical={false} />
                 <XAxis
                   axisLine={false}
                   dataKey="nombre"
-                  tick={{ fill: '#58413f', fontSize: 10 }}
+                  tick={{ fill: colores.texto, fontSize: 10 }}
                   tickLine={false}
                   interval={0}
                   angle={-25}
@@ -224,7 +289,7 @@ export function TableroPage() {
                 />
                 <YAxis
                   axisLine={false}
-                  tick={{ fill: '#58413f', fontSize: 11 }}
+                  tick={{ fill: colores.texto, fontSize: 11 }}
                   tickFormatter={(valor: number) => `$${Math.round(valor / 1000)}k`}
                   tickLine={false}
                   type="number"
@@ -232,17 +297,17 @@ export function TableroPage() {
                 />
                 <Tooltip
                   contentStyle={{
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
+                    background: colores.fondo,
+                    border: '1px solid ' + colores.rejilla,
                     borderRadius: '0.25rem',
                     fontSize: 12,
                   }}
                   formatter={(valor) => [formatoPrecio(Number(valor)), 'Ventas']}
                 />
-                <Bar dataKey="total" radius={[2, 2, 0, 0]}>
+                <Bar dataKey="total" isAnimationActive={false} radius={[2, 2, 0, 0]}>
                   {datosVentas.map((_entrada, indice) => (
                     <Cell
-                      fill={indice % 2 === 0 ? COLOR_BARRA : COLOR_BARRA_ALT}
+                      fill={indice % 2 === 0 ? colores.barra : colores.barraAlt}
                       key={`celda-${indice}`}
                     />
                   ))}
@@ -253,7 +318,7 @@ export function TableroPage() {
         </section>
       </div>
 
-      <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-[#e2e8f0] rounded-lg p-space-md">
+      <section className="flex flex-col gap-space-md bg-surface-container-lowest border border-outline-variant rounded-lg p-space-md">
         <div className="flex flex-wrap items-center justify-between gap-space-md">
           <h2 className="font-headline-md text-headline-md text-on-surface">
             Vinos sin stock en sala con stock en el depósito
@@ -262,7 +327,7 @@ export function TableroPage() {
           <label className="flex flex-col gap-space-xs">
             <span className="font-label-md text-label-md text-on-surface-variant">Sala</span>
             <select
-              className="h-9 px-space-sm bg-white border border-slate-300 rounded font-body-md text-body-md text-slate-900 focus:outline-none focus:border-[#800e13]"
+              className="h-9 px-space-sm bg-surface-container-lowest border border-field-border rounded font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary"
               onChange={(e) => setIdSala(Number(e.target.value))}
               value={idSala}
             >
@@ -286,7 +351,7 @@ export function TableroPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-[#e2e8f0]">
+                <tr className="border-b border-outline-variant">
                   <th className="text-left py-space-sm font-label-md text-label-md text-on-surface-variant">
                     Vino
                   </th>
@@ -300,7 +365,7 @@ export function TableroPage() {
               </thead>
               <tbody>
                 {sinStock.map((vino) => (
-                  <tr className="border-b border-[#eef1f4]" key={vino.cod_vino}>
+                  <tr className="border-b border-outline-variant/60" key={vino.cod_vino}>
                     <td className="py-space-sm font-body-md text-body-md text-on-surface">
                       {vino.nombre}
                     </td>

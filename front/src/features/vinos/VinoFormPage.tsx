@@ -20,10 +20,10 @@ const FILA_VACIA: FilaComposicion = { id: '', porcentaje: '' }
 const ANIO_ACTUAL = new Date().getFullYear()
 
 const INPUT_CLASS =
-  'w-full h-9 px-space-sm bg-white border border-slate-300 rounded font-body-md text-body-md text-slate-900 focus:outline-none focus:border-[#800e13] focus:ring-1 focus:ring-[#800e13] transition-colors'
+  'w-full h-9 px-space-sm bg-surface-container-lowest border border-field-border rounded font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors'
 
 const INPUT_NUMERO_CLASS =
-  'w-full h-9 px-space-sm bg-white border border-slate-300 rounded font-tabular-data text-tabular-data text-slate-900 focus:outline-none focus:border-[#800e13] focus:ring-1 focus:ring-[#800e13] transition-colors'
+  'w-full h-9 px-space-sm bg-surface-container-lowest border border-field-border rounded font-tabular-data text-tabular-data text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors'
 
 export function VinoFormPage() {
   const { codVino } = useParams()
@@ -232,7 +232,7 @@ export function VinoFormPage() {
   if (esEdicion && cargandoDetalle) {
     return (
       <div className="w-full max-w-4xl mx-auto flex flex-col gap-space-lg">
-        <div className="w-full bg-white border border-slate-200 rounded p-space-lg shadow-sm">
+        <div className="w-full bg-surface-container-lowest border border-slate-200 rounded p-space-lg shadow-sm">
           <p className="font-body-md text-body-md text-slate-500">Cargando ficha del vino...</p>
         </div>
       </div>
@@ -248,7 +248,7 @@ export function VinoFormPage() {
           title="No se pudo cargar el vino"
         />
         <Link
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-300 rounded font-label-md text-label-md text-slate-700 hover:bg-slate-50 transition-colors w-fit"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-surface-container-lowest border border-field-border rounded font-label-md text-label-md text-on-surface-variant hover:bg-slate-50 transition-colors w-fit"
           to="/vinos"
         >
           Volver al catálogo
@@ -305,7 +305,7 @@ export function VinoFormPage() {
           />
         )}
 
-        <section className="w-full bg-white border border-slate-200 rounded p-space-lg sm:p-space-xl shadow-sm">
+        <section className="w-full bg-surface-container-lowest border border-slate-200 rounded p-space-lg sm:p-space-xl shadow-sm">
           <form className="flex flex-col gap-y-space-xl" onSubmit={handleSubmit}>
             <section className="flex flex-col">
               <div className="pb-space-sm border-b border-slate-200 mb-space-lg">
@@ -320,7 +320,7 @@ export function VinoFormPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-space-lg gap-y-space-md">
                 <div className="flex flex-col">
                   <label
-                    className="font-label-sm text-label-sm text-slate-700 mb-1 flex items-center justify-between"
+                    className="font-label-sm text-label-sm text-on-surface-variant mb-1 flex items-center justify-between"
                     htmlFor="commercialName"
                   >
                     <span>Nombre comercial</span>
@@ -341,7 +341,7 @@ export function VinoFormPage() {
 
                 <div className="flex flex-col">
                   <label
-                    className="font-label-sm text-label-sm text-slate-700 mb-1 flex items-center justify-between"
+                    className="font-label-sm text-label-sm text-on-surface-variant mb-1 flex items-center justify-between"
                     htmlFor="winerySelect"
                   >
                     <span>Bodega elaboradora</span>
@@ -390,7 +390,7 @@ export function VinoFormPage() {
 
                 <div className="flex flex-col">
                   <label
-                    className="font-label-sm text-label-sm text-slate-700 mb-1"
+                    className="font-label-sm text-label-sm text-on-surface-variant mb-1"
                     htmlFor="wineType"
                   >
                     Tipo de vino
@@ -411,7 +411,7 @@ export function VinoFormPage() {
 
                 <div className="flex flex-col">
                   <label
-                    className="font-label-sm text-label-sm text-slate-700 mb-1 flex items-center justify-between"
+                    className="font-label-sm text-label-sm text-on-surface-variant mb-1 flex items-center justify-between"
                     htmlFor="vintageYear"
                   >
                     <span>Añada (Cosecha)</span>
@@ -431,7 +431,7 @@ export function VinoFormPage() {
 
                 <div className="flex flex-col">
                   <label
-                    className="font-label-sm text-label-sm text-slate-700 mb-1"
+                    className="font-label-sm text-label-sm text-on-surface-variant mb-1"
                     htmlFor="packaging"
                   >
                     Presentación estándar
@@ -451,7 +451,7 @@ export function VinoFormPage() {
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="font-label-sm text-label-sm text-slate-700 mb-1" htmlFor="abv">
+                  <label className="font-label-sm text-label-sm text-on-surface-variant mb-1" htmlFor="abv">
                     Graduación alcohólica (% v/v)
                   </label>
                   <div className="relative">
@@ -473,7 +473,7 @@ export function VinoFormPage() {
 
                 <div className="flex flex-col">
                   <label
-                    className="font-label-sm text-label-sm text-slate-700 mb-1"
+                    className="font-label-sm text-label-sm text-on-surface-variant mb-1"
                     htmlFor="unitPrice"
                   >
                     Precio unitario oficial
@@ -497,13 +497,13 @@ export function VinoFormPage() {
 
                 <div className="flex flex-col">
                   <label
-                    className="font-label-sm text-label-sm text-slate-700 mb-1"
+                    className="font-label-sm text-label-sm text-on-surface-variant mb-1"
                     htmlFor="internalCode"
                   >
                     Código interno
                   </label>
                   <input
-                    className="w-full h-9 px-space-sm bg-slate-50 border border-slate-300 rounded font-tabular-data text-tabular-data text-slate-600 focus:outline-none"
+                    className="w-full h-9 px-space-sm bg-slate-50 border border-field-border rounded font-tabular-data text-tabular-data text-slate-600 focus:outline-none"
                     disabled
                     id="internalCode"
                     type="text"
@@ -556,7 +556,7 @@ export function VinoFormPage() {
                       <tr className="hover:bg-slate-50/70 transition-colors" key={index}>
                         <td className="py-2 px-space-md">
                           <select
-                            className="w-full h-8 px-2 bg-white border border-slate-300 rounded font-body-md text-body-md text-slate-800 focus:outline-none focus:border-[#800e13]"
+                            className="w-full h-8 px-2 bg-surface-container-lowest border border-field-border rounded font-body-md text-body-md text-slate-800 focus:outline-none focus:border-primary"
                             onChange={(event) =>
                               actualizarFila(index, 'id', event.target.value)
                             }
@@ -573,7 +573,7 @@ export function VinoFormPage() {
                         <td className="py-2 px-space-md text-right">
                           <div className="relative inline-block w-28">
                             <input
-                              className="w-full h-8 pl-2 pr-6 text-right font-tabular-data text-tabular-data font-semibold text-slate-900 border border-slate-300 rounded focus:outline-none focus:border-[#800e13]"
+                              className="w-full h-8 pl-2 pr-6 text-right font-tabular-data text-tabular-data font-semibold text-on-surface border border-field-border rounded focus:outline-none focus:border-primary"
                               max="100"
                               min="0"
                               onChange={(event) =>
@@ -607,7 +607,7 @@ export function VinoFormPage() {
 
               <div className="mt-space-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md">
                 <button
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded font-label-md text-label-md text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest border border-field-border rounded font-label-md text-label-md text-on-surface-variant hover:bg-slate-50 hover:border-slate-400 transition-colors"
                   onClick={agregarFila}
                   type="button"
                 >
@@ -676,13 +676,13 @@ export function VinoFormPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
                 {MARIDAJES.map((maridaje) => (
                   <label
-                    className="flex items-center justify-between gap-space-sm border border-slate-200 rounded px-space-md py-2 bg-white hover:bg-slate-50 transition-colors cursor-pointer"
+                    className="flex items-center justify-between gap-space-sm border border-slate-200 rounded px-space-md py-2 bg-surface-container-lowest hover:bg-slate-50 transition-colors cursor-pointer"
                     key={maridaje.id_maridaje}
                   >
                     <span className="flex items-center gap-space-sm">
                       <input
                         checked={maridajesSeleccionados.includes(maridaje.id_maridaje)}
-                        className="h-4 w-4 rounded border-slate-300 accent-[#800e13]"
+                        className="h-4 w-4 rounded border-field-border accent-primary"
                         onChange={() => alternarMaridaje(maridaje.id_maridaje)}
                         type="checkbox"
                       />
@@ -705,14 +705,14 @@ export function VinoFormPage() {
               </div>
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                 <button
-                  className="w-full sm:w-auto px-5 py-2 bg-white border border-slate-300 text-slate-700 rounded font-label-md text-label-md hover:bg-slate-50 transition-colors text-center"
+                  className="w-full sm:w-auto px-5 py-2 bg-surface-container-lowest border border-field-border text-on-surface-variant rounded font-label-md text-label-md hover:bg-slate-50 transition-colors text-center"
                   onClick={() => navigate('/vinos')}
                   type="button"
                 >
                   Cancelar
                 </button>
                 <button
-                  className="w-full sm:w-auto px-6 py-2 bg-[#800e13] hover:bg-[#ad2831] text-white rounded font-label-md text-label-md shadow-sm transition-colors flex items-center justify-center gap-space-xs disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-6 py-2 bg-primary-container hover:bg-primary text-white rounded font-label-md text-label-md shadow-sm transition-colors flex items-center justify-center gap-space-xs disabled:opacity-60 disabled:cursor-not-allowed"
                   disabled={guardando}
                   type="submit"
                 >

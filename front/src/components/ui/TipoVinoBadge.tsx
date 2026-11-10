@@ -1,10 +1,14 @@
 import type { TipoVino } from '../../api/types'
 
 const ESTILOS: Record<TipoVino, string> = {
-  tinto: 'bg-[#ffdad6]/40 text-[#5b0006] border border-[#ffdad6]',
-  blanco: 'bg-surface-container text-on-surface-variant border border-[#cbd5e1]',
-  rosado: 'bg-[#ffdad6]/30 text-[#805344] border border-[#ffdad6]',
-  espumante: 'bg-[#d3e4ff]/50 text-[#002a4e] border border-[#a2c9ff]',
+  tinto:
+    'bg-primary-fixed/40 text-primary border border-primary-fixed dark:bg-primary-container dark:text-on-primary-container',
+  blanco:
+    'bg-surface-container text-on-surface-variant border border-field-border',
+  rosado:
+    'bg-secondary-fixed/60 text-secondary border border-secondary-fixed dark:bg-secondary-container dark:text-on-secondary-container',
+  espumante:
+    'bg-tertiary-fixed/50 text-tertiary border border-tertiary-fixed-dim dark:bg-tertiary-container dark:text-on-tertiary-container',
 }
 
 const ETIQUETAS: Record<TipoVino, string> = {

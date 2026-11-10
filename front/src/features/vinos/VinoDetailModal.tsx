@@ -49,7 +49,7 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
 
   return (
     <Modal labelledBy="vino-modal-title" onClose={onClose} open>
-      <div className="flex items-start justify-between p-space-lg border-b border-[#e2e8f0]">
+      <div className="flex items-start justify-between p-space-lg border-b border-outline-variant">
         <div>
           <h2 className="font-headline-md text-headline-md text-on-surface" id="vino-modal-title">
             {detalle
@@ -84,7 +84,7 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
         {detalle && (
           <>
             <div className="grid grid-cols-3 gap-space-sm">
-              <div className="border border-[#e2e8f0] rounded p-space-sm bg-[#f8fafc]">
+              <div className="border border-outline-variant rounded p-space-sm bg-surface-container-low">
                 <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                   Depósito
                 </div>
@@ -92,7 +92,7 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
                   {detalle.stock_deposito} botellas
                 </div>
               </div>
-              <div className="border border-[#e2e8f0] rounded p-space-sm bg-[#f8fafc]">
+              <div className="border border-outline-variant rounded p-space-sm bg-surface-container-low">
                 <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                   Salas
                 </div>
@@ -100,7 +100,7 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
                   {detalle.stock_salas} botellas
                 </div>
               </div>
-              <div className="border border-[#e2e8f0] rounded p-space-sm bg-[#f8fafc]">
+              <div className="border border-outline-variant rounded p-space-sm bg-surface-container-low">
                 <div className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
                   Total
                 </div>
@@ -114,9 +114,9 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
               <h3 className="font-label-md text-label-md text-on-surface uppercase tracking-wider mb-space-xs">
                 Composición de Cepas
               </h3>
-              <div className="border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="border border-outline-variant rounded overflow-hidden">
                 <table className="w-full text-left text-body-sm">
-                  <thead className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                  <thead className="bg-surface-container-low border-b border-outline-variant">
                     <tr>
                       <th className="py-1.5 px-space-md font-label-sm text-label-sm text-on-surface-variant" scope="col">
                         Cepa
@@ -126,7 +126,7 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#f1f5f9]">
+                  <tbody className="divide-y divide-outline-variant/60">
                     {detalle.composicion.length === 0 && (
                       <tr>
                         <td className="py-1.5 px-space-md text-on-surface-variant" colSpan={2}>
@@ -153,7 +153,7 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
               <h3 className="font-label-md text-label-md text-on-surface uppercase tracking-wider mb-space-xs">
                 Maridajes Recomendados
               </h3>
-              <ul className="border border-[#e2e8f0] rounded divide-y divide-[#f1f5f9] bg-[#ffffff]">
+              <ul className="border border-outline-variant rounded divide-y divide-outline-variant/60 bg-surface-container-lowest">
                 {detalle.maridajes.length === 0 && (
                   <li className="py-2 px-space-md font-body-md text-body-md text-on-surface-variant">
                     Sin maridajes registrados.
@@ -178,9 +178,9 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-space-sm p-space-md bg-[#f8fafc] border-t border-[#e2e8f0]">
+      <div className="flex items-center justify-end gap-space-sm p-space-md bg-surface-container-low border-t border-outline-variant">
         <button
-          className="px-space-md py-[6px] bg-[#ffffff] border border-[#cbd5e1] hover:bg-[#f1f5f9] font-label-md text-label-md text-on-surface rounded transition-colors cursor-pointer"
+          className="px-space-md py-[6px] bg-surface-container-lowest border border-field-border hover:bg-surface-container font-label-md text-label-md text-on-surface rounded transition-colors cursor-pointer"
           onClick={onClose}
           type="button"
         >
@@ -188,7 +188,7 @@ export function VinoDetailModal({ codVino, onClose }: VinoDetailModalProps) {
         </button>
         {detalle && (
           <Link
-            className="px-space-md py-[6px] bg-[#800e13] hover:bg-[#ad2831] text-white font-label-md text-label-md rounded transition-colors"
+            className="px-space-md py-[6px] bg-primary-container hover:bg-primary text-white font-label-md text-label-md rounded transition-colors"
             to={`/vinos/${detalle.cod_vino}/editar`}
           >
             Editar vino

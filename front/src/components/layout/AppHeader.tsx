@@ -1,19 +1,19 @@
 import { NavLink } from 'react-router-dom'
 import { MaterialIcon } from '../ui/MaterialIcon'
 
-const enlaceActivo = 'bg-[#410003] text-white border-b-2 border-primary-fixed'
+const enlaceActivo = 'bg-on-primary-fixed text-white border-b-2 border-primary-fixed'
 const enlaceInactivo =
-  'text-[#ffdad6]/80 hover:text-white hover:bg-[#340d04] transition-colors'
+  'text-primary-fixed/80 hover:text-white hover:bg-on-primary-fixed/60 transition-colors'
 
 export function AppHeader() {
   return (
-    <header className="fixed top-0 left-0 w-full h-14 bg-[#250902] z-50 flex items-center justify-between px-margin lg:px-margin-desktop border-b border-[#3b1207]">
+    <header className="fixed top-0 left-0 w-full h-14 bg-on-primary-fixed z-50 flex items-center justify-between px-margin lg:px-margin-desktop border-b border-primary-container/60">
       <div className="flex items-center gap-space-xl">
         <div className="flex items-center gap-space-sm">
-          <MaterialIcon name="wine_bar" className="text-[#ffdad6] text-[20px]" />
+          <MaterialIcon name="wine_bar" className="text-primary-fixed text-[20px]" />
           <span className="font-headline-md text-headline-md text-white tracking-tight">
             Bodegas del Atuel{' '}
-            <span className="hidden sm:inline font-body-sm text-body-sm text-[#ffdad6]/70 font-normal">
+            <span className="hidden sm:inline font-body-sm text-body-sm text-primary-fixed/70 font-normal">
               | Sistema de Gestión Vitivinícola
             </span>
           </span>
@@ -66,7 +66,7 @@ export function AppHeader() {
           <span className="font-label-md text-label-md text-white leading-none">
             Dirección Enológica
           </span>
-          <span className="font-label-sm text-label-sm text-[#ffdad6]/70 leading-none mt-space-xs">
+          <span className="font-label-sm text-label-sm text-primary-fixed/70 leading-none mt-space-xs">
             Sede Central - Mendoza
           </span>
         </div>
