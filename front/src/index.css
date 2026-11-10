@@ -2,6 +2,147 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Sistema de color del proyecto (Material 3).
+
+  Los tokens semánticos de tailwind.config.js leen estas variables, de modo
+  que cambiar el tema es cambiar un solo bloque de valores. El atributo
+  `dark` en el <html> activa la paleta oscura.
+
+  Cada variable guarda los canales R G B separados para poder usarlas con
+  opacidad: rgb(var(--md-primary) / <alpha-value>).
+*/
+
+:root {
+  /* Marca: vino */
+  --md-primary: 91 0 6;
+  --md-on-primary: 255 255 255;
+  --md-primary-container: 128 14 19;
+  --md-on-primary-container: 255 218 214;
+  --md-primary-fixed: 255 218 214;
+  --md-primary-fixed-dim: 255 179 173;
+  --md-on-primary-fixed: 65 0 3;
+  --md-on-primary-fixed-variant: 139 24 26;
+  --md-inverse-primary: 255 179 173;
+
+  /* Superficies */
+  --md-background: 247 249 251;
+  --md-on-background: 25 28 30;
+  --md-surface: 247 249 251;
+  --md-on-surface: 25 28 30;
+  --md-surface-bright: 247 249 251;
+  --md-surface-dim: 216 218 220;
+  --md-surface-variant: 224 227 229;
+  --md-surface-container-lowest: 255 255 255;
+  --md-surface-container-low: 242 244 246;
+  --md-surface-container: 236 238 240;
+  --md-surface-container-high: 230 232 234;
+  --md-surface-container-highest: 224 227 229;
+  --md-on-surface-variant: 88 65 63;
+  --md-inverse-surface: 45 49 51;
+  --md-inverse-on-surface: 239 241 243;
+
+  /* Contornos */
+  --md-outline: 140 113 110;
+  --md-outline-variant: 224 191 188;
+
+  /* Acentos */
+  --md-secondary: 128 83 68;
+  --md-on-secondary: 255 255 255;
+  --md-secondary-container: 255 196 177;
+  --md-on-secondary-container: 123 79 64;
+  --md-secondary-fixed: 255 219 207;
+  --md-secondary-fixed-dim: 243 185 166;
+  --md-on-secondary-fixed: 49 19 7;
+  --md-on-secondary-fixed-variant: 101 60 47;
+  --md-tertiary: 0 42 78;
+  --md-on-tertiary: 255 255 255;
+  --md-tertiary-container: 0 64 115;
+  --md-on-tertiary-container: 129 173 230;
+  --md-tertiary-fixed: 211 228 255;
+  --md-tertiary-fixed-dim: 162 201 255;
+  --md-on-tertiary-fixed: 0 28 56;
+  --md-on-tertiary-fixed-variant: 17 72 124;
+
+  /* Error */
+  --md-error: 186 26 26;
+  --md-on-error: 255 255 255;
+  --md-error-container: 255 218 214;
+  --md-on-error-container: 147 0 10;
+
+  /* Tinte de superficie */
+  --md-surface-tint: 173 49 46;
+
+  /* Superficie de 입력 (controles de formulario) */
+  --md-field: 255 255 255;
+  --md-field-border: 203 213 225;
+}
+
+.dark {
+  /* Marca: vino, tono claro para contrastar sobre fondo oscuro */
+  --md-primary: 255 180 171;
+  --md-on-primary: 105 0 5;
+  --md-primary-container: 147 0 10;
+  --md-on-primary-container: 255 218 214;
+  --md-primary-fixed: 255 218 214;
+  --md-primary-fixed-dim: 255 179 173;
+  --md-on-primary-fixed: 65 0 3;
+  --md-on-primary-fixed-variant: 255 202 197;
+  --md-inverse-primary: 128 14 19;
+
+  /* Superficies */
+  --md-background: 20 18 24;
+  --md-on-background: 230 224 233;
+  --md-surface: 20 18 24;
+  --md-on-surface: 230 224 233;
+  --md-surface-bright: 56 52 59;
+  --md-surface-dim: 20 18 24;
+  --md-surface-variant: 73 69 79;
+  --md-surface-container-lowest: 12 10 16;
+  --md-surface-container-low: 29 27 32;
+  --md-surface-container: 33 31 38;
+  --md-surface-container-high: 43 41 48;
+  --md-surface-container-highest: 54 52 59;
+  --md-on-surface-variant: 202 196 208;
+  --md-inverse-surface: 230 224 233;
+  --md-inverse-on-surface: 45 41 47;
+
+  /* Contornos */
+  --md-outline: 148 143 153;
+  --md-outline-variant: 73 69 79;
+
+  /* Acentos */
+  --md-secondary: 229 189 178;
+  --md-on-secondary: 68 42 36;
+  --md-secondary-container: 94 64 56;
+  --md-on-secondary-container: 255 219 207;
+  --md-secondary-fixed: 255 219 207;
+  --md-secondary-fixed-dim: 243 185 166;
+  --md-on-secondary-fixed: 49 19 7;
+  --md-on-secondary-fixed-variant: 255 202 197;
+  --md-tertiary: 211 228 255;
+  --md-on-tertiary: 0 50 88;
+  --md-tertiary-container: 0 73 127;
+  --md-on-tertiary-container: 211 228 255;
+  --md-tertiary-fixed: 211 228 255;
+  --md-tertiary-fixed-dim: 162 201 255;
+  --md-on-tertiary-fixed: 0 28 56;
+  --md-on-tertiary-fixed-variant: 194 220 255;
+
+  /* Error */
+  --md-error: 255 180 171;
+  --md-on-error: 105 0 5;
+  --md-error-container: 147 0 10;
+  --md-on-error-container: 255 218 214;
+
+  /* Tinte de superficie */
+  --md-surface-tint: 255 136 127;
+
+  /* Superficie de input */
+  --md-field: 33 31 38;
+  --md-field-border: 73 69 79;
+}
+
 @layer base {
   html,
   body {
@@ -19,6 +160,12 @@
 
   main > :last-child {
     margin-bottom: 0 !important;
+  }
+
+  /* Los controles nativos se ven distintos en cada tema. */
+  select option {
+    background-color: rgb(var(--md-field));
+    color: rgb(var(--md-on-surface));
   }
 }
 
