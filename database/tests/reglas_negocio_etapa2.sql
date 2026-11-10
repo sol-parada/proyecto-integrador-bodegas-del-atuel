@@ -307,7 +307,9 @@ BEGIN
 
         RAISE EXCEPTION 'RN-09 no rechazó una venta sin stock suficiente';
     EXCEPTION
-        WHEN check_violation THEN
+        -- P0001: la regla de negocio (stock insuficiente) fue rechazada
+        -- por el trigger trg_registrar_venta.
+        WHEN raise_exception THEN
             RAISE NOTICE 'RN-09 OK: venta sin stock rechazada';
     END;
 END;

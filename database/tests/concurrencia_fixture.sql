@@ -1,5 +1,9 @@
 -- Fixture para demostrar dos ventas simultáneas de la última botella.
 -- Ejecutar sobre una base con todas las migraciones aplicadas.
+--
+-- Todo corre dentro de una transacción que se cierra con ROLLBACK, para no
+-- dejar datos de prueba en la base.
+BEGIN;
 
 INSERT INTO localidad (
     codigo_postal, nombre, provincia, encargado_regional
@@ -48,7 +52,9 @@ INSERT INTO stock_sala (
     -970, -970, 1
 );
 
-SELECT id_sala, cod_vino, cantidad
-FROM stock_sala
-WHERE id_sala = -970
-  AND cod_vino = -970;
+  SELECT id_sala, cod_vino, cantidad
+  FROM stock_sala
+  WHERE id_sala = -970
+    AND cod_vino = -970;
+
+ROLLBACK;
