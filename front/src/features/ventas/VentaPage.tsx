@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError } from '../../api/client'
 import { listarClientes } from '../../api/clientes'
@@ -643,7 +643,7 @@ export function VentaPage() {
                 Cancelar comprobante
               </button>
               <button
-                className="px-6 py-2 bg-primary-container hover:bg-primary active:bg-primary/80 text-on-primary rounded font-label-md text-label-md font-semibold tracking-wide transition-colors shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-40"
+                className="px-6 py-2 bg-primary-container hover:bg-primary hover:text-on-primary active:bg-primary/80 text-on-primary-container rounded font-label-md text-label-md font-semibold tracking-wide transition-colors shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-40"
                 disabled={registrando || lineas.length === 0}
                 onClick={registrarVenta}
                 type="button"
