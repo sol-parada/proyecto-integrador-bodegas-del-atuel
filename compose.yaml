@@ -6,8 +6,11 @@
 #   docker compose up -d --build
 #
 # Servicios:
-#   db       PostgreSQL 16 con los datos del proyecto.
-#   migrar   Aplica las migraciones y prepara el rol de la API (perfil 'setup').
+#   db       PostgreSQL 16. En la primera ejecucion crea el volumen y aplica
+#            solo las migraciones (esquema + rol de la API). Los datos de
+#            la carga masiva se cargan con el seeder de Python.
+#   rol      Sincroniza la contrasena del rol app_api con el .env, para que
+#            la API siempre pueda conectarse.
 #   api      API REST en FastAPI, conectada con el rol app_api.
 #   front    Frontend React servido por Nginx, con proxy hacia la API.
 # =============================================================================
@@ -21,40 +24,48 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      API_DB_USER: ${API_DB_USER}
+      API_DB_PASSWORD: ${API_DB_PASSWORD}
     ports:
       - "127.0.0.1:${POSTGRES_PORT}:5432"
     volumes:
       - etapa3_test_data:/var/lib/postgresql/data
+      # La primera vez que se crea el volumen, se aplican las migraciones.
+      - ./database/migrations:/migrations:ro
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+      # Scripts de prueba SQL de la etapa 2.
+      - ./database/tests:/pruebas:ro
+      - ./docker/pruebas:/pruebas_script:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} && psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -tAc \"SELECT 1 FROM pg_class WHERE relname='comprobante'\" | grep -q 1",
+        ]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 10s
 
-  # Aplica las migraciones y deja el rol de la API listo para conectarse.
-  # No queda ejecutándose: se usa una sola vez por despliegue.
-  migrar:
+  # Sincroniza la contrasena del rol de la API con la del .env.
+  # Se ejecuta una vez y termina. La API depende de que termine bien.
+  rol:
     image: postgres:16
-    container_name: bodegas-atuel-migrar
-    profiles: ["setup"]
+    container_name: bodegas-atuel-rol
     depends_on:
       db:
         condition: service_healthy
     environment:
-      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGHOST: db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      API_DB_USER: ${API_DB_USER}
       API_DB_PASSWORD: ${API_DB_PASSWORD}
     volumes:
-      - ./database/migrations:/migrations:ro
-    entrypoint: >
-      bash -c "
-        set -euo pipefail
-        for f in /migrations/0*.sql; do
-          echo \"Aplicando \$$(basename \$$f)\"
-          psql -v ON_ERROR_STOP=1 -U ${POSTGRES_USER} -d ${POSTGRES_DB} \
-               -v api_password=\"$$API_DB_PASSWORD\" -f \"\$$f\"
-        done
-        echo 'Migraciones aplicadas.'
-      "
+      - ./docker/sincronizar-rol.sh:/sincronizar-rol.sh:ro
+    entrypoint: ["bash", "/sincronizar-rol.sh"]
+    restart: "no"
 
   api:
     build:
@@ -65,6 +76,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      rol:
+        condition: service_completed_successfully
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: 5432
@@ -74,7 +87,11 @@ services:
     ports:
       - "127.0.0.1:${API_PORT}:8000"
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/salud')\""]
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/salud')\"",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
