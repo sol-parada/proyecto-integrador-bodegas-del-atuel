@@ -2,6 +2,9 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-
 import { AppLayout } from './components/layout/AppLayout'
 import { CatalogoPage } from './features/vinos/CatalogoPage'
 import { VinoFormPage } from './features/vinos/VinoFormPage'
+import { VentaPage } from './features/ventas/VentaPage'
+import { TransferenciasPage } from './features/transferencias/TransferenciasPage'
+import { TableroPage } from './features/tablero/TableroPage'
 
 function VinoFormRoute() {
   const { codVino } = useParams()
@@ -17,6 +20,9 @@ export default function App() {
           <Route element={<CatalogoPage />} path="/vinos" />
           <Route element={<VinoFormRoute />} path="/vinos/nuevo" />
           <Route element={<VinoFormRoute />} path="/vinos/:codVino/editar" />
+          <Route element={<VentaPage />} path="/ventas" />
+          <Route element={<TransferenciasPage />} path="/transferencias" />
+          <Route element={<TableroPage />} path="/tablero" />
           <Route element={<Navigate replace to="/vinos" />} path="*" />
         </Routes>
       </AppLayout>

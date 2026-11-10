@@ -29,24 +29,36 @@ export function AppHeader() {
           >
             Catálogo de Vinos
           </NavLink>
-          <span
-            className="h-14 flex items-center px-space-md font-label-md text-label-md text-[#ffdad6]/40 cursor-not-allowed"
-            title="Próximamente"
+          <NavLink
+            className={({ isActive }) =>
+              `h-14 flex items-center px-space-md font-label-md text-label-md ${
+                isActive ? enlaceActivo : enlaceInactivo
+              }`
+            }
+            to="/ventas"
           >
             Nueva Venta
-          </span>
-          <span
-            className="h-14 flex items-center px-space-md font-label-md text-label-md text-[#ffdad6]/40 cursor-not-allowed"
-            title="Próximamente"
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `h-14 flex items-center px-space-md font-label-md text-label-md ${
+                isActive ? enlaceActivo : enlaceInactivo
+              }`
+            }
+            to="/transferencias"
           >
             Transferencias
-          </span>
-          <span
-            className="h-14 flex items-center px-space-md font-label-md text-label-md text-[#ffdad6]/40 cursor-not-allowed"
-            title="Próximamente"
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `h-14 flex items-center px-space-md font-label-md text-label-md ${
+                isActive ? enlaceActivo : enlaceInactivo
+              }`
+            }
+            to="/tablero"
           >
             Tablero
-          </span>
+          </NavLink>
         </nav>
       </div>
       <div className="flex items-center gap-space-md">

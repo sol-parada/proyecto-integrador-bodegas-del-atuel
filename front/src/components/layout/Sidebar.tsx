@@ -11,9 +11,9 @@ interface ItemMenu {
 
 const ITEMS: ItemMenu[] = [
   { label: 'Listado de Varietales', icon: 'view_list', to: '/vinos' },
-  { label: 'Nueva Venta', icon: 'point_of_sale' },
-  { label: 'Transferencias', icon: 'swap_horiz' },
-  { label: 'Tablero', icon: 'dashboard' },
+  { label: 'Nueva Venta', icon: 'point_of_sale', to: '/ventas' },
+  { label: 'Transferencias', icon: 'swap_horiz', to: '/transferencias' },
+  { label: 'Tablero', icon: 'dashboard', to: '/tablero' },
 ]
 
 const ESTADO_SALUD: Record<HealthState, { color: string; texto: string; detalle: string }> = {
