@@ -13,14 +13,14 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi import FastAPI, HTTPException
 
-from etapa6_valen.comprobantes import crear_comprobante
-from etapa6_valen.ingresos import crear_ingreso
-from etapa6_valen.transferencias import crear_transferencia
-from etapa6_valen.errores import (
+from app.operaciones.comprobantes import crear_comprobante
+from app.operaciones.ingresos import crear_ingreso
+from app.operaciones.transferencias import crear_transferencia
+from app.errores import (
     convertir_error_postgresql,
     convertir_error_validacion,
 )
-from etapa6_valen.api_rutas import crear_router
+from app.operaciones.api_rutas import crear_router
 
 
 def conexion_simulada():
