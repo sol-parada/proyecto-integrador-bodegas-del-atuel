@@ -1,6 +1,7 @@
 # Bodegas del Atuel - Frontend
 
-Aplicación React + Vite + TypeScript + Tailwind para el catálogo y la gestión de vinos.
+Aplicación React + Vite + TypeScript + Tailwind para la gestión de ventas,
+transferencias y el catálogo de vinos.
 
 ## Requisitos
 
@@ -28,12 +29,19 @@ Vite proxifica `/api` hacia `http://127.0.0.1:8000`. La variable `VITE_API_BASE_
 - `npm run lint`: análisis con Oxlint.
 - `npm run preview`: sirve el build de producción.
 
-## Funcionalidad
+## Pantallas
 
-- Catálogo con filtros por tipo, cepa, bodega y añada.
-- Paginación server-side y modal de detalle con bodega, composición, maridajes y stock.
-- Alta y edición de vinos con validaciones HTML, composición de cepas y maridajes.
-- La suma de composición se muestra como ayuda visual; la validación definitiva (RN-05) la realiza PostgreSQL y el error se muestra en pantalla.
+- **Catálogo** (`/vinos`): filtros por tipo, cepa, bodega y añada, paginación
+  server-side y ficha con composición, maridajes y stock.
+- **Alta y edición** (`/vinos/nuevo`, `/vinos/{cod}/editar`): la suma de
+  composición se muestra como ayuda visual; la validación definitiva (RN-05)
+  la realiza PostgreSQL y el error se muestra en pantalla.
+- **Nueva venta** (`/ventas`): elige sala y cliente, agrega vinos y registra
+  el comprobante. Los importes los calcula la base.
+- **Transferencias** (`/transferencias`): listado con estado y acciones
+  habilitadas según la transición de estados (RN-10 y RN-11).
+- **Tablero** (`/tablero`): ranking de los 10 vinos más vendidos, ventas por
+  sala del último trimestre y vinos sin stock en la sala elegida.
 - Indicador de salud de la API en el sidebar.
 
 ## Estructura
@@ -41,22 +49,31 @@ Vite proxifica `/api` hacia `http://127.0.0.1:8000`. La variable `VITE_API_BASE_
 - `src/api/`: cliente HTTP, tipos y llamadas a la API.
 - `src/components/`: layout y componentes reutilizables.
 - `src/data/`: catálogos estáticos de cepas, maridajes, tipos y volúmenes.
-- `src/features/vinos/`: catálogo, ficha y formulario de vinos.
+- `src/features/`: una carpeta por pantalla.
 - `src/lib/`: formateadores.
 - `src/hooks/`: hooks compartidos.
 
 ## Contrato utilizado
 
 - `GET /salud`
-- `GET /vinos`
-- `GET /vinos/{cod_vino}`
-- `POST /vinos`
-- `PUT /vinos/{cod_vino}`
+- `GET /vinos`, `GET /vinos/{cod_vino}`, `POST /vinos`, `PUT /vinos/{cod_vino}`
+- `GET /salas`, `GET /salas/{id_sala}/stock`
+- `GET /clientes`
+- `POST /comprobantes`, `GET /comprobantes/{numero}`
+- `GET /transferencias`, `GET /transferencias/{nro}`, `POST /transferencias`,
+  `POST /transferencias/{nro}/renglones`, `POST /transferencias/{nro}/terminar`,
+  `POST /transferencias/{nro}/procesar`
+- `GET /reportes/top-vinos`, `GET /reportes/ventas-por-sala`,
+  `GET /reportes/vinos-sin-stock`
 
 El payload de alta/edición envía `composicion` como una lista de pares `[id_cepa, porcentaje]` y `maridajes` como una lista de IDs.
 
 ## Notas
 
-- La API actual no expone endpoints de catálogo. Las bodegas y añadas se derivan de `/vinos` y `/vinos/{cod_vino}`.
-- No se modifica el código de `api/` desde el frontend.
+- El frontend **no calcula** totales, descuentos ni stock: los muestra tal
+  como los devuelve la API, que a su vez los hace calcular a PostgreSQL.
+- Los mensajes de error de las reglas de negocio se muestran sin
+  reinterpretar, incluyendo el código SQLSTATE.
+- La API no expone endpoints de catálogo de bodegas ni de añadas: se derivan
+  de `/vinos` y `/vinos/{cod_vino}`.
 - El frontend no expone la eliminación de vinos.

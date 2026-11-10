@@ -48,7 +48,7 @@ la API traduce el error.
 | 4 | Índices y rendimiento: medición con `EXPLAIN (ANALYZE, BUFFERS)` | Completa |
 | 5 | Consultas SQL: S1 a S12, I1 a I6, U1 a U6, D1 a D6 | Completa |
 | 6 | API REST con FastAPI, Docker Compose y pruebas | **Completa** |
-| 7 | Frontend | En curso: catálogo de vinos y formulario de alta |
+| 7 | Frontend: las cinco pantallas contra la API real | **Completa** |
 | 8 | Despliegue en la nube | Pendiente |
 | 9 | Informe final y defensa | Pendiente |
 
@@ -156,6 +156,7 @@ Documentación en `docs/etapa3_carga_masiva.md`.
 
 | Documento | Contenido |
 |---|---|
+| `docs/etapa7.md` | Informe de la etapa 7: pantallas, arquitectura, endpoints |
 | `docs/etapa6.md` | Informe de la etapa 6: arquitectura, endpoints, errores, roles, pruebas |
 | `docs/INFORME_ETAPA2.md` | Informe de la etapa 2 |
 | `docs/trazabilidad_etapa2.md` | Trazabilidad regla → mecanismo → prueba |
