@@ -70,11 +70,33 @@ docker compose up -d --build
 El front consume la API a través del proxy `/api` de Nginx, por lo que no hace
 falta configurar CORS.
 
-Para aplicar las migraciones sobre la base del contenedor:
+### Qué hace el arranque
+
+- La **base** crea el volumen y, la primera vez, aplica las migraciones en
+  orden y deja el esquema completo con el rol `app_api` configurado.
+- El servicio **rol** sincroniza la contraseña de `app_api` con la del `.env`,
+  para que la API siempre pueda conectarse.
+- La **API** se conecta con el rol `app_api`, que tiene privilegios mínimos: no
+  puede modificar el stock ni los totales.
+- El **front** se sirve con Nginx y proxea `/api` hacia la API.
+
+### Cargar los datos
+
+La base queda con el esquema pero sin los datos de la carga masiva. Para
+cargarlos:
 
 ```powershell
-docker compose --profile setup run --rm migrar
+uv run python .\database\seed\etapa3.py
 ```
+
+### Empezar de cero
+
+```powershell
+docker compose down -v
+docker compose up -d --build
+```
+
+Esto borra el volumen y reconstruye la base desde las migraciones.
 
 ## Levantar solo la API en local
 
@@ -143,6 +165,25 @@ uv run pytest tests/ -v
   errores, OpenAPI y rutas.
 
 Las pruebas de integración se omiten (`skip`) si la base no está disponible.
+
+### Pruebas SQL de la etapa 2
+
+Verifican que las quince reglas de negocio se comportan como corresponde:
+
+```powershell
+docker compose exec -T db bash /pruebas_script/ejecutar_pruebas.sh
+```
+
+| Script | Qué verifica |
+|---|---|
+| `database/tests/reglas_negocio_etapa2.sql` | RN-01 a RN-15, una por regla |
+| `database/tests/pruebas_etapa2.sql` | Funciones, procedimientos y estados |
+| `database/tests/consultas_fixture.sql` | Datos de apoyo para las consultas SQL |
+
+Los tres terminan con `ROLLBACK`: no dejan datos de prueba.
+
+La tabla de trazabilidad regla → mecanismo → prueba está en
+`docs/trazabilidad_etapa2.md`.
 
 ## Carga masiva
 

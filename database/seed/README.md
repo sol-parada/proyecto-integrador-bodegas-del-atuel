@@ -117,13 +117,13 @@ en orden, las migraciones correspondientes:
 6. 006_vistas.sql
 7. 007_roles.sql
 
-Los archivos se encuentran en `database/migrations/`.
+  Los archivos se encuentran en `database/migrations/`.
 
-No se debe ejecutar `004_datos_prueba.sql` antes de
-la carga masiva porque inserta datos adicionales.
+  No se debe ejecutar `database/tests/datos_prueba.sql` antes de
+  la carga masiva porque inserta datos adicionales.
 
-La base debe contener la estructura y las reglas de
-negocio, pero no registros de prueba.
+  La base debe contener la estructura y las reglas de
+  negocio, pero no registros de prueba.
 
 ## 5. Catálogos CSV
 

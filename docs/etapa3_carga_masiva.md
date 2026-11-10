@@ -351,9 +351,9 @@ La ejecución se realizó en una base aislada:
 
 `bodegas_etapa3_test`
 
-Se aplicaron las migraciones `001` a `008` de las
-Etapas 1 y 2, sin ejecutar `004_datos_prueba.sql`,
-sobre una base vacía, obteniendo 29 tablas.
+  Se aplicaron las migraciones `001` a `008` de las
+  Etapas 1 y 2, sin ejecutar `database/tests/datos_prueba.sql`,
+  sobre una base vacía, obteniendo 29 tablas.
 
 La carga finalizó correctamente, con código de salida 0,
 en aproximadamente 5 minutos y 19 segundos.
@@ -474,9 +474,9 @@ Se preparó una base de datos aislada:
 Se aplicaron las migraciones `001` a `008`
 correspondientes a las Etapas 1 y 2.
 
-La base contenía 29 tablas vacías antes de ejecutar
-el generador. Se aplicaron las migraciones `001` a
-`008`, sin ejecutar `004_datos_prueba.sql`.
+  La base contenía 29 tablas vacías antes de ejecutar
+  el generador. Se aplicaron las migraciones `001` a
+  `008`, sin ejecutar `database/tests/datos_prueba.sql`.
 
 Se utilizó `MODO_PRUEBA = True`.
 
