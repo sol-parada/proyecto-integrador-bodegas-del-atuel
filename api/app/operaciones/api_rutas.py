@@ -14,20 +14,20 @@ from pydantic import BaseModel, Field
 from psycopg2 import Error as PostgreSQLError
 from psycopg2.extras import RealDictCursor
 
-from etapa6_valen.comprobantes import crear_comprobante
-from etapa6_valen.ingresos import (
+from app.operaciones.comprobantes import crear_comprobante
+from app.operaciones.ingresos import (
     crear_ingreso,
     agregar_renglon_ingreso,
     terminar_ingreso,
     procesar_ingreso,
 )
-from etapa6_valen.transferencias import (
+from app.operaciones.transferencias import (
     crear_transferencia,
     agregar_renglon_transferencia,
     terminar_transferencia,
     procesar_transferencia,
 )
-from etapa6_valen.errores import (
+from app.errores import (
     convertir_error_postgresql,
     convertir_error_validacion,
 )
