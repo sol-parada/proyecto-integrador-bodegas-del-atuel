@@ -18,10 +18,10 @@ BEGIN
         RAISE EXCEPTION 'Ingreso % inexistente', p_codigo USING ERRCODE = 'P0002';
     END IF;
     IF v_ingreso.estado <> 'terminado' THEN
-        RAISE EXCEPTION 'RN-10: public.ingreso % debe estar terminado', p_codigo USING ERRCODE = '23514';
+        RAISE EXCEPTION 'RN-10: public.ingreso % debe estar terminado', p_codigo USING ERRCODE = 'P0001';
     END IF;
     IF NOT EXISTS (SELECT FROM public.renglon_ingreso WHERE codigo_ingreso = p_codigo) THEN
-        RAISE EXCEPTION 'Ingreso sin renglones' USING ERRCODE = '23514';
+        RAISE EXCEPTION 'Ingreso sin renglones' USING ERRCODE = 'P0001';
     END IF;
     FOR r IN SELECT ri.*, v.cuit_bodega FROM public.renglon_ingreso ri
              JOIN public.vino v USING (cod_vino) WHERE codigo_ingreso = p_codigo ORDER BY cod_vino
@@ -51,10 +51,10 @@ BEGIN
         RAISE EXCEPTION 'Transferencia % inexistente', p_numero USING ERRCODE = 'P0002';
     END IF;
     IF v_transferencia.estado <> 'terminado' THEN
-        RAISE EXCEPTION 'RN-11: public.transferencia % debe estar terminada', p_numero USING ERRCODE = '23514';
+        RAISE EXCEPTION 'RN-11: public.transferencia % debe estar terminada', p_numero USING ERRCODE = 'P0001';
     END IF;
     IF NOT EXISTS (SELECT FROM public.renglon_transferencia WHERE numero_solicitud = p_numero) THEN
-        RAISE EXCEPTION 'Transferencia sin renglones' USING ERRCODE = '23514';
+        RAISE EXCEPTION 'Transferencia sin renglones' USING ERRCODE = 'P0001';
     END IF;
     -- Orden común de vinos reduce deadlocks entre documentos con varios renglones.
     FOR r IN SELECT * FROM public.renglon_transferencia
@@ -67,7 +67,7 @@ BEGIN
         WHERE cod_vino = r.cod_vino FOR UPDATE;
         IF NOT FOUND OR v_stock < r.cantidad THEN
             RAISE EXCEPTION 'RN-11: stock de depósito ausente o insuficiente para public.vino %', r.cod_vino
-              USING ERRCODE = '23514';
+              USING ERRCODE = 'P0001';
         END IF;
         UPDATE public.stock_deposito SET cantidad = cantidad - r.cantidad WHERE cod_vino = r.cod_vino;
         INSERT INTO public.stock_sala(id_sala, cod_vino, cantidad)
@@ -100,10 +100,10 @@ BEGIN
         RAISE EXCEPTION 'Ingreso % inexistente', p_codigo USING ERRCODE = 'P0002';
     END IF;
     IF v_ingreso.estado <> 'en_confeccion' THEN
-        RAISE EXCEPTION 'Ingreso % debe estar en confección', p_codigo USING ERRCODE = '23514';
+        RAISE EXCEPTION 'Ingreso % debe estar en confección', p_codigo USING ERRCODE = 'P0001';
     END IF;
     IF NOT EXISTS (SELECT FROM public.renglon_ingreso WHERE codigo_ingreso = p_codigo) THEN
-        RAISE EXCEPTION 'Ingreso sin renglones' USING ERRCODE = '23514';
+        RAISE EXCEPTION 'Ingreso sin renglones' USING ERRCODE = 'P0001';
     END IF;
     IF EXISTS (
         SELECT FROM public.renglon_ingreso ri JOIN public.vino v USING (cod_vino)
@@ -131,10 +131,10 @@ BEGIN
         RAISE EXCEPTION 'Transferencia % inexistente', p_numero USING ERRCODE = 'P0002';
     END IF;
     IF v_transferencia.estado <> 'en_confeccion' THEN
-        RAISE EXCEPTION 'Transferencia % debe estar en confección', p_numero USING ERRCODE = '23514';
+        RAISE EXCEPTION 'Transferencia % debe estar en confección', p_numero USING ERRCODE = 'P0001';
     END IF;
     IF NOT EXISTS (SELECT FROM public.renglon_transferencia WHERE numero_solicitud = p_numero) THEN
-        RAISE EXCEPTION 'Transferencia sin renglones' USING ERRCODE = '23514';
+        RAISE EXCEPTION 'Transferencia sin renglones' USING ERRCODE = 'P0001';
     END IF;
     IF EXISTS (SELECT FROM public.renglon_transferencia
         WHERE numero_solicitud = p_numero AND cantidad <= 0) THEN

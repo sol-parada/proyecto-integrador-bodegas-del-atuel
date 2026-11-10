@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- BODEGAS DEL ATUEL - 005_TRIGGERS.SQL
 -- Triggers de integridad y reglas de negocio - Etapa 2
 -- ============================================================================
@@ -15,7 +15,8 @@ AS $$
 BEGIN
     IF NEW.cantidad <= 0 THEN
         RAISE EXCEPTION
-            'RN-15: la cantidad del renglón del comprobante debe ser mayor que cero';
+            'RN-15: la cantidad del renglón del comprobante debe ser mayor que cero'
+            USING ERRCODE = '23514';
     END IF;
 
     RETURN NEW;
@@ -122,6 +123,8 @@ BEGIN
     WHERE codigo_ingreso = v_codigo_ingreso;
 
     IF NOT FOUND AND TG_OP = 'DELETE' THEN
+        -- El ON DELETE CASCADE de ingreso borra los renglones después de la
+        -- cabecera. El borrado del documento completo debe permitirse.
         RETURN OLD;
     ELSIF NOT FOUND THEN
         RAISE EXCEPTION
@@ -172,6 +175,14 @@ BEGIN
     WHERE numero_solicitud = v_numero_solicitud;
 
     IF NOT FOUND THEN
+        -- El ON DELETE CASCADE de transferencia borra los renglones después de
+        -- borrar la cabecera, por lo que la cabecera ya no existe. En ese caso
+        -- el borrado en cascada debe permitirse (RN-12 regula los cambios sobre
+        -- renglones, no el borrado del documento completo).
+        IF TG_OP = 'DELETE' THEN
+            RETURN OLD;
+        END IF;
+
         RAISE EXCEPTION
             'No existe la transferencia asociada al renglón';
     END IF;
@@ -218,7 +229,8 @@ BEGIN
         RAISE EXCEPTION
             'RN-10/RN-11: transición de estado no permitida: % -> %',
             OLD.estado,
-            NEW.estado;
+            NEW.estado
+            USING ERRCODE = 'P0001';
     END IF;
 
     RETURN NEW;
@@ -278,7 +290,8 @@ BEGIN
             RAISE EXCEPTION
                 'RN-05: la composición del vino % debe sumar 100%% y actualmente suma %',
                 v_cod_vino,
-                v_total;
+                v_total
+                USING ERRCODE = 'P0001';
         END IF;
     END LOOP;
 
@@ -354,7 +367,7 @@ BEGIN
             'RN-09: stock insuficiente para el vino % en la sala %',
             NEW.cod_vino,
             v_id_sala
-            USING ERRCODE = '23514';
+            USING ERRCODE = 'P0001';
     END IF;
 
     v_tasa := public.fn_descuento_cliente(
