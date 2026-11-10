@@ -161,10 +161,9 @@ WHERE c.fecha_alta < CURRENT_DATE - INTERVAL '5 years'
 ROLLBACK;
 
 
--- D5: Intentar borrar ingresos procesados de hace más de 365 días.
--- RN-12 impide borrar sus renglones mediante ON DELETE CASCADE:
--- los renglones solo pueden modificarse cuando el ingreso está
--- en_confeccion. Se conserva esta prueba para documentar la restricción.
+-- D5: Borrar ingresos procesados de hace más de 365 días.
+-- RN-12 mantiene bloqueados los borrados directos de renglones
+-- procesados, pero permite el borrado en cascada del ingreso completo.
 BEGIN;
 
 SELECT COUNT(*) AS ingresos_candidatos
@@ -172,18 +171,9 @@ FROM ingreso
 WHERE estado = 'procesado'
   AND fecha < CURRENT_DATE - INTERVAL '365 days';
 
-DO $$
-BEGIN
-    DELETE FROM ingreso
-    WHERE estado = 'procesado'
-      AND fecha < CURRENT_DATE - INTERVAL '365 days';
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE NOTICE
-            'D5 rechazada por la regla activa de renglones: %',
-            SQLERRM;
-END;
-$$;
+DELETE FROM ingreso
+WHERE estado = 'procesado'
+  AND fecha < CURRENT_DATE - INTERVAL '365 days';
 
 SELECT COUNT(*) AS ingresos_candidatos_restantes
 FROM ingreso

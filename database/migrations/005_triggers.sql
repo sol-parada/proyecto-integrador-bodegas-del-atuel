@@ -121,7 +121,9 @@ BEGIN
     FROM ingreso
     WHERE codigo_ingreso = v_codigo_ingreso;
 
-    IF NOT FOUND THEN
+    IF NOT FOUND AND TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSIF NOT FOUND THEN
         RAISE EXCEPTION
             'No existe el ingreso asociado al renglón';
     END IF;
