@@ -97,6 +97,16 @@ export interface StockSalaVino {
   stock_sala: number
 }
 
+export interface StockDepositoVino {
+  cod_vino: number
+  nombre: string
+  tipo: TipoVino
+  anada: number
+  volumen_ml: number
+  precio: number | string
+  stock_deposito: number
+}
+
 /* ------------------------------------------------------------------ */
 /* Clientes                                                            */
 /* ------------------------------------------------------------------ */
