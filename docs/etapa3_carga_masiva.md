@@ -381,9 +381,9 @@ Las validaciones confirmaron:
 Se ejecutaron los siguientes comandos:
 
 ```powershell
-docker exec bodegas-etapa3-test pg_dump -U postgres -d bodegas_etapa3_test --clean --if-exists -f /tmp/dump_etapa3_definitivo.sql
+docker exec bodegas-atuel-db pg_dump -U postgres -d bodegas_atuel --clean --if-exists -f /tmp/dump_etapa3_definitivo.sql
 
-docker exec bodegas-etapa3-test gzip -f /tmp/dump_etapa3_definitivo.sql
+docker exec bodegas-atuel-db gzip -f /tmp/dump_etapa3_definitivo.sql
 ```
 
 El respaldo generado fue:
@@ -397,19 +397,19 @@ Tamaño aproximado: 7,8 MB.
 Se creó una base descartable independiente:
 
 ```powershell
-docker exec bodegas-etapa3-test createdb -U postgres bodegas_etapa3_restauracion_sol
+docker exec bodegas-atuel-db createdb -U postgres bodegas_etapa3_restauracion_sol
 ```
 
 Se descomprimió el respaldo:
 
 ```powershell
-docker exec bodegas-etapa3-test sh -c 'gzip -dc /tmp/dump_etapa3_definitivo.sql.gz > /tmp/dump_etapa3_restauracion_sol.sql'
+docker exec bodegas-atuel-db sh -c 'gzip -dc /tmp/dump_etapa3_definitivo.sql.gz > /tmp/dump_etapa3_restauracion_sol.sql'
 ```
 
 Y se restauró:
 
 ```powershell
-docker exec bodegas-etapa3-test psql -X -v ON_ERROR_STOP=1 -U postgres -d bodegas_etapa3_restauracion_sol -f /tmp/dump_etapa3_restauracion_sol.sql
+docker exec bodegas-atuel-db psql -X -v ON_ERROR_STOP=1 -U postgres -d bodegas_etapa3_restauracion_sol -f /tmp/dump_etapa3_restauracion_sol.sql
 ```
 
 La restauración finalizó sin errores.

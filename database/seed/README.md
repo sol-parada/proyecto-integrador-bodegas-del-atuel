@@ -83,30 +83,24 @@ Verificar el estado:
 docker compose ps
 ```
 
-### Entorno aislado de pruebas
+### Entorno local con datos cargados
 
-El archivo `compose.etapa3.yaml` permite iniciar un contenedor
-PostgreSQL 16 independiente del entorno principal del proyecto.
+El archivo `compose.yaml` inicia el contenedor PostgreSQL 16 oficial
+del proyecto y publica la base en `127.0.0.1:5433`.
 
-Antes de iniciar el contenedor se debe definir la variable
-`ETAPA3_DB_PASSWORD`.
-
-En PowerShell:
+Desde la raíz del proyecto:
 
 ```powershell
-$env:ETAPA3_DB_PASSWORD = Read-Host "Contraseña para PostgreSQL"
-docker compose -f compose.etapa3.yaml up -d
+docker compose up -d
 ```
-
-Este entorno publica PostgreSQL en `127.0.0.1:5433`.
 
 Para conectarse desde Python se deben configurar:
 
-- `POSTGRES_DB`: bodegas_etapa3_test
+- `POSTGRES_DB`: bodegas_atuel
 - `POSTGRES_USER`: postgres
 - `POSTGRES_PORT`: 5433
 - `DB_HOST`: 127.0.0.1
-- `POSTGRES_PASSWORD`: la misma contraseña del contenedor
+- `POSTGRES_PASSWORD`: la misma contraseña definida en `.env`
 
 El volumen Docker conserva los datos entre reinicios.
 
